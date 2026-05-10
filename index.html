@@ -736,6 +736,7 @@ body.sb-collapsed .sb-toggle{right:-28px;opacity:1;width:28px;height:28px;border
   <div class="sb-bottom">
     <button class="sb-btn" id="sbShopBtn" style="display:none" onclick="showPage('shop')">💰<span class="sb-tip">Boutique</span></button>
     <button class="sb-btn" id="sbRewardBtn" style="display:none" onclick="showPage('reward')">🎁<span class="sb-tip">Récompense</span></button>
+    <button class="sb-btn" id="sbLeaderBtn" style="display:none" onclick="showPage('leaderboard')">🏆<span class="sb-tip">Classement</span></button>
     <button class="sb-btn" id="sbGameBtn" style="display:none" onclick="showPage('game')">🎮<span class="sb-tip">Mini-Jeu</span></button>
     <button class="sb-btn" id="sbAdminBtn" style="display:none" onclick="openAdmin()">⚙<span class="sb-tip">Admin</span></button>
   </div>
@@ -1179,6 +1180,18 @@ body.sb-collapsed .sb-toggle{right:-28px;opacity:1;width:28px;height:28px;border
 </div>
 
 <!-- ═══════ SHOP PAGE ═══════ -->
+<!-- ═══════ LEADERBOARD PAGE ═══════ -->
+<div class="cw-page" id="pageLeaderboard" style="display:none">
+  <div style="max-width:600px;margin:0 auto;padding:24px">
+    <h2 style="font-size:1.5rem;font-weight:800;margin-bottom:20px">🏆 Classement Snake</h2>
+    <div id="leaderGrid" style="display:flex;flex-direction:column;gap:8px"></div>
+    <div style="margin-top:32px">
+      <h3 style="font-size:1rem;font-weight:700;margin-bottom:12px">📡 Activité récente</h3>
+      <div id="publicActivityFeed" style="display:flex;flex-direction:column;gap:6px;max-height:400px;overflow-y:auto"></div>
+    </div>
+  </div>
+</div>
+
 <div class="cw-page" id="pageShop" style="display:none">
   <div style="max-width:900px;margin:0 auto;padding:24px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px">
@@ -1195,6 +1208,7 @@ body.sb-collapsed .sb-toggle{right:-28px;opacity:1;width:28px;height:28px;border
     <div style="display:flex;gap:8px;margin-bottom:20px">
       <button class="btn btn-primary btn-sm" id="shopTabStore" onclick="switchShopTab('store')">🛒 Boutique</button>
       <button class="btn btn-ghost btn-sm" id="shopTabInv" onclick="switchShopTab('inventory')">🎒 Inventaire</button>
+      <button class="btn btn-ghost btn-sm" id="shopTabCosmetics" onclick="switchShopTab('cosmetics')">🎨 Thèmes & Skins</button>
     </div>
     <div id="shopStoreSection">
       <div id="shopItemsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px"></div>
@@ -1204,28 +1218,39 @@ body.sb-collapsed .sb-toggle{right:-28px;opacity:1;width:28px;height:28px;border
       <div id="invGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px"></div>
       <div id="invEmpty" style="display:none;text-align:center;padding:40px;color:var(--txt3);font-size:.82rem">Votre inventaire est vide</div>
     </div>
+    <div id="shopCosmeticsSection" style="display:none">
+      <h3 style="font-size:1rem;font-weight:700;margin-bottom:12px">🎨 Thèmes de couleur</h3>
+      <div id="cosmeticThemes" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:24px"></div>
+      <h3 style="font-size:1rem;font-weight:700;margin-bottom:12px">🐍 Skins Snake</h3>
+      <div id="cosmeticSkins" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px"></div>
+    </div>
   </div>
 </div>
 
 <!-- ═══════ DAILY REWARD PAGE ═══════ -->
 <div class="cw-page" id="pageReward" style="display:none">
-  <div style="max-width:600px;margin:0 auto;padding:24px;text-align:center">
-    <h2 style="font-size:1.5rem;font-weight:800;margin-bottom:8px">🎁 Récompense Quotidienne</h2>
-    <p style="color:var(--txt2);font-size:.82rem;margin-bottom:32px">Ouvrez votre CapBox chaque jour pour gagner des CapCoins !</p>
-    <div id="rewardBoxWrap" style="position:relative;width:200px;height:200px;margin:0 auto 24px">
-      <div id="rewardBox" class="cws-box" style="width:200px;height:200px;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center;font-size:4rem;background:linear-gradient(135deg,rgba(124,108,255,.15),rgba(34,211,238,.1));border:2px solid rgba(124,108,255,.35);border-radius:22px;transition:transform .3s,box-shadow .3s" onclick="claimDailyReward()">
+  <div style="max-width:700px;margin:0 auto;padding:24px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+      <h2 style="font-size:1.5rem;font-weight:800;margin:0">🎁 Récompense Quotidienne</h2>
+      <div id="streakFlame" style="font-size:1.4rem">🔥</div>
+      <div style="font-family:var(--mono);font-weight:700;font-size:1rem" id="streakCount">0</div>
+    </div>
+    <p style="color:var(--txt2);font-size:.82rem;margin-bottom:24px">Réclamez votre récompense chaque jour ! Manquez un jour et la série repart à 0.</p>
+    <div id="streakSnake" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px"></div>
+    <div id="rewardBoxWrap" style="text-align:center;margin-bottom:20px">
+      <div id="rewardBox" class="cws-box" style="width:140px;height:140px;cursor:pointer;position:relative;display:inline-flex;align-items:center;justify-content:center;font-size:3rem;background:linear-gradient(135deg,rgba(124,108,255,.15),rgba(34,211,238,.1));border:2px solid rgba(124,108,255,.35);border-radius:22px;transition:transform .3s,box-shadow .3s" onclick="claimDailyReward()">
         <div id="rewardBoxContent" style="display:flex;flex-direction:column;align-items:center;gap:4px">
-          <span style="font-size:3.5rem">📦</span>
-          <span style="font-size:.7rem;font-family:var(--mono);color:var(--accent);letter-spacing:1px">CWS</span>
+          <span style="font-size:3rem">📦</span>
+          <span style="font-size:.65rem;font-family:var(--mono);color:var(--accent);letter-spacing:1px">CWS</span>
         </div>
       </div>
     </div>
-    <div id="rewardResult" style="display:none;margin-bottom:20px">
+    <div id="rewardResult" style="display:none;margin-bottom:20px;text-align:center">
       <div id="rewardResultIcon" style="font-size:3rem;margin-bottom:8px"></div>
       <div id="rewardResultText" style="font-size:1.2rem;font-weight:700;color:var(--gold)"></div>
       <div id="rewardResultSub" style="font-size:.78rem;color:var(--txt2);margin-top:4px"></div>
     </div>
-    <div id="rewardCooldown" style="display:none;color:var(--txt3);font-size:.82rem;margin-top:16px"></div>
+    <div id="rewardCooldown" style="display:none;color:var(--txt3);font-size:.82rem;margin-top:16px;text-align:center"></div>
     <div style="margin-top:24px;display:flex;align-items:center;justify-content:center;gap:8px">
       <span style="font-size:1.1rem">🪙</span>
       <span style="font-family:var(--mono);font-weight:700;color:var(--cyan);font-size:1rem" id="rewardCCBal">0</span>
@@ -1283,6 +1308,10 @@ body.sb-collapsed .sb-toggle{right:-28px;opacity:1;width:28px;height:28px;border
           <button id="as-pages"     class="aside-btn" onclick="admTab('pages')">📄 Pages</button>
           <button id="as-shop"      class="aside-btn" onclick="admTab('shop')">💰 Boutique</button>
           <button id="as-rewards"   class="aside-btn" onclick="admTab('rewards')">🎁 Récompenses</button>
+          <button id="as-referral"  class="aside-btn" onclick="admTab('referral')">🎫 Parrainage</button>
+          <button id="as-themes"    class="aside-btn" onclick="admTab('themes')">🎨 Thèmes</button>
+          <button id="as-skins"     class="aside-btn" onclick="admTab('skins')">🐍 Skins Snake</button>
+          <button id="as-activity"  class="aside-btn" onclick="admTab('activity')">📡 Activité</button>
           <button id="as-stats"     class="aside-btn" onclick="admTab('stats')">📊 Statistiques</button>
           <button id="as-logs"      class="aside-btn" onclick="admTab('logs')">📜 Logs</button>
           <div class="aside-sep"></div>
@@ -1638,6 +1667,52 @@ body.sb-collapsed .sb-toggle{right:-28px;opacity:1;width:28px;height:28px;border
             </div>
           </div>
 
+          <!-- ═══ REFERRAL / PARRAINAGE ═══ -->
+          <div class="adm-tab" id="atab-referral">
+            <div class="a-card">
+              <h4>🎫 Gestion des codes de parrainage</h4>
+              <div class="info-box" style="margin-bottom:12px">Créez des codes promo. L'utilisateur entre un code à l'inscription ou dans son profil pour gagner des CapCoins ou un item custom.</div>
+              <div id="referralTokensList"></div>
+              <button class="btn btn-ghost btn-sm" onclick="addReferralRow()" style="margin-top:8px">+ Ajouter un code</button>
+              <div style="margin-top:12px"><button class="btn btn-primary btn-sm" onclick="saveReferralTokens()">💾 Sauvegarder</button></div>
+              <div id="refSaveMsg" class="ok-msg" style="display:none;margin-top:8px"></div>
+            </div>
+          </div>
+
+          <!-- ═══ THEMES ═══ -->
+          <div class="adm-tab" id="atab-themes">
+            <div class="a-card">
+              <h4>🎨 Thèmes personnalisés</h4>
+              <div class="info-box" style="margin-bottom:12px">Créez des thèmes de couleur achetables en CapCoins dans la boutique.</div>
+              <div id="themesList"></div>
+              <button class="btn btn-ghost btn-sm" onclick="addThemeRow()" style="margin-top:8px">+ Ajouter un thème</button>
+              <div style="margin-top:12px"><button class="btn btn-primary btn-sm" onclick="saveThemes()">💾 Sauvegarder</button></div>
+              <div id="themeSaveMsg" class="ok-msg" style="display:none;margin-top:8px"></div>
+            </div>
+          </div>
+
+          <!-- ═══ SKINS SNAKE ═══ -->
+          <div class="adm-tab" id="atab-skins">
+            <div class="a-card">
+              <h4>🐍 Skins Snake</h4>
+              <div class="info-box" style="margin-bottom:12px">Gérez les skins de serpent achetables en CapCoins.</div>
+              <div id="skinsList"></div>
+              <button class="btn btn-ghost btn-sm" onclick="addSkinRow()" style="margin-top:8px">+ Ajouter un skin</button>
+              <div style="margin-top:12px"><button class="btn btn-primary btn-sm" onclick="saveSkins()">💾 Sauvegarder</button></div>
+              <div id="skinSaveMsg" class="ok-msg" style="display:none;margin-top:8px"></div>
+            </div>
+          </div>
+
+          <!-- ═══ ACTIVITY FEED ═══ -->
+          <div class="adm-tab" id="atab-activity">
+            <div class="a-card">
+              <h4>📡 Fil d'activité</h4>
+              <div class="info-box" style="margin-bottom:12px">Toutes les actions publiques des utilisateurs en temps réel.</div>
+              <button class="btn btn-ghost btn-sm" onclick="loadAdminActivity()" style="margin-bottom:12px">↻ Rafraîchir</button>
+              <div id="activityList" style="max-height:600px;overflow-y:auto"></div>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -1909,13 +1984,19 @@ async function loadMe(){
   // CapCoins data
   curUser.capcoins=me.capcoins||0;
   curUser.lastDailyReward=me.lastDailyReward||null;
+  curUser.dailyStreak=me.dailyStreak||0;
   curUser.inventory=me.inventory||[];
+  curUser.theme=me.theme||'';
+  curUser.snakeSkin=me.snakeSkin||'';
+  curUser.referralUsed=me.referralUsed||'';
   updateCCDisplay();
+  if(curUser.theme&&typeof applyTheme==='function')applyTheme(curUser.theme);
   // Show pending CC notifications
   if(me.pendingCCNotifs&&me.pendingCCNotifs.length>0)showCCNotifs(me.pendingCCNotifs);
   // Show shop & reward sidebar buttons for logged-in users
   const sbShop=document.getElementById('sbShopBtn');if(sbShop)sbShop.style.display='';
   const sbReward=document.getElementById('sbRewardBtn');if(sbReward)sbReward.style.display='';
+  const sbLeader=document.getElementById('sbLeaderBtn');if(sbLeader)sbLeader.style.display='';
   // Charge les likes depuis Firestore (plus de localStorage)
   likes=me.likes||{};
   localStorage.setItem('cw_session',JSON.stringify(curUser));
@@ -2432,14 +2513,14 @@ function openAuth(tab='login'){
   document.getElementById('authOv').classList.add('open');
   switchAuth(tab);
 }
-function switchAuth(tab){document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active',['login','register'][i]===tab));document.getElementById('authTitle').textContent=tab==='login'?'Connexion':'Créer un compte';const f=document.getElementById('authForm');if(tab==='login'){f.innerHTML=`<div class="fg"><label>Pseudo</label><input type="text" class="inp" id="lUser" placeholder="Votre pseudo..."></div><div class="fg"><label>Mot de passe</label><input type="password" class="inp" id="lPass" placeholder="••••••••" onkeypress="if(event.key==='Enter')doLogin()"></div><div class="err-msg" id="lErr"></div><div style="margin-top:13px"><button class="btn btn-primary btn-full" onclick="doLogin()">Se connecter →</button></div>`;}else{const re=EMOJIS[Math.floor(Math.random()*EMOJIS.length)];f.innerHTML=buildJackpotBanner(999)+`<div class="fg"><label>Pseudo</label><input type="text" class="inp" id="rUser" placeholder="Choisissez un pseudo..."></div><div class="fg"><label>Email <span style="color:var(--red)">*</span></label><input type="email" class="inp" id="rEmail" placeholder="exemple@gmail.com"></div><div class="fg"><label>Mot de passe</label><input type="password" class="inp" id="rPass" placeholder="Min. 8 caractères..."></div><div class="fg"><label>Avatar (emoji)</label><input type="text" class="inp" id="rEmoji" placeholder="${re}" maxlength="2" oninput="enforceOneEmoji(this)"></div><div class="err-msg" id="rErr"></div><div style="margin-top:13px"><button class="btn btn-primary btn-full" id="rBtn" onclick="doRegister()">Continuer →</button></div>`;getClientCount().then(n=>{const banner=document.getElementById('jackpotBanner');if(!banner)return;const digits=String(n).split('');document.getElementById('jackpotNumber').innerHTML=digits.map((_,i)=>`<div class="jackpot-digit"><span id="jd-${i}">0</span></div>`).join('');animateJackpot(n);});}}
-async function doRegister(){const u=document.getElementById('rUser').value.trim();const email=document.getElementById('rEmail').value.trim();const p=document.getElementById('rPass').value;let e=document.getElementById('rEmoji').value.trim()||'👤';const eSegs=[...new Intl.Segmenter().segment(e)];if(eSegs.length>1)e=eSegs[0].segment;const err=document.getElementById('rErr');if(!u||!email||!p){err.textContent='✕ Remplissez tous les champs';return;}if(p.length<8){err.textContent='✕ Mot de passe : min. 8 caractères';return;}const btn=document.getElementById('rBtn');btn.disabled=true;btn.textContent='⟳ Envoi...';const data=await apiPost('/api/auth/otp/request',{username:u,email,password:p,emoji:e});if(data.error){err.textContent='✕ '+data.error;btn.disabled=false;btn.textContent='Continuer →';return;}pendingReg={u,email,p,e};showOtp(email);}
+function switchAuth(tab){document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active',['login','register'][i]===tab));document.getElementById('authTitle').textContent=tab==='login'?'Connexion':'Créer un compte';const f=document.getElementById('authForm');if(tab==='login'){f.innerHTML=`<div class="fg"><label>Pseudo</label><input type="text" class="inp" id="lUser" placeholder="Votre pseudo..."></div><div class="fg"><label>Mot de passe</label><input type="password" class="inp" id="lPass" placeholder="••••••••" onkeypress="if(event.key==='Enter')doLogin()"></div><div class="err-msg" id="lErr"></div><div style="margin-top:13px"><button class="btn btn-primary btn-full" onclick="doLogin()">Se connecter →</button></div>`;}else{const re=EMOJIS[Math.floor(Math.random()*EMOJIS.length)];f.innerHTML=buildJackpotBanner(999)+`<div class="fg"><label>Pseudo</label><input type="text" class="inp" id="rUser" placeholder="Choisissez un pseudo..."></div><div class="fg"><label>Email <span style="color:var(--red)">*</span></label><input type="email" class="inp" id="rEmail" placeholder="exemple@gmail.com"></div><div class="fg"><label>Mot de passe</label><input type="password" class="inp" id="rPass" placeholder="Min. 8 caractères..."></div><div class="fg"><label>Avatar (emoji)</label><input type="text" class="inp" id="rEmoji" placeholder="${re}" maxlength="2" oninput="enforceOneEmoji(this)"></div><div class="fg"><label>Code parrainage <span style="color:var(--txt3);font-size:.7rem">(optionnel)</span></label><input type="text" class="inp" id="rReferral" placeholder="Ex: FREETOKEN13"></div><div class="err-msg" id="rErr"></div><div style="margin-top:13px"><button class="btn btn-primary btn-full" id="rBtn" onclick="doRegister()">Continuer →</button></div>`;getClientCount().then(n=>{const banner=document.getElementById('jackpotBanner');if(!banner)return;const digits=String(n).split('');document.getElementById('jackpotNumber').innerHTML=digits.map((_,i)=>`<div class="jackpot-digit"><span id="jd-${i}">0</span></div>`).join('');animateJackpot(n);});}}
+async function doRegister(){const u=document.getElementById('rUser').value.trim();const email=document.getElementById('rEmail').value.trim();const p=document.getElementById('rPass').value;let e=document.getElementById('rEmoji').value.trim()||'👤';const eSegs=[...new Intl.Segmenter().segment(e)];if(eSegs.length>1)e=eSegs[0].segment;const ref=(document.getElementById('rReferral')||{}).value?.trim()||'';const err=document.getElementById('rErr');if(!u||!email||!p){err.textContent='✕ Remplissez tous les champs';return;}if(p.length<8){err.textContent='✕ Mot de passe : min. 8 caractères';return;}const btn=document.getElementById('rBtn');btn.disabled=true;btn.textContent='⟳ Envoi...';const data=await apiPost('/api/auth/otp/request',{username:u,email,password:p,emoji:e});if(data.error){err.textContent='✕ '+data.error;btn.disabled=false;btn.textContent='Continuer →';return;}pendingReg={u,email,p,e,referral:ref};showOtp(email);}
 function maskEmail(e){const[l,d]=e.split('@');return l[0]+'*'.repeat(Math.max(l.length-1,3))+'@'+d;}
 function showOtp(email,context){document.getElementById('authTitle').textContent='Vérification';document.querySelectorAll('.auth-tab').forEach(t=>t.style.display='none');document.getElementById('authForm').innerHTML=`<div style="text-align:center;margin-bottom:16px"><div style="font-size:1.8rem;margin-bottom:8px">📬</div><p style="color:var(--txt2);font-size:.82rem;line-height:1.7">Code envoyé à<br><span class="em">${maskEmail(email)}</span></p></div><label style="display:block;font-size:.66rem;font-weight:700;color:var(--txt2);text-align:center;margin-bottom:3px;text-transform:uppercase">Code à 6 chiffres</label><div class="otp-row">${[0,1,2,3,4,5].map(i=>`<input class="otp-in" id="otp${i}" maxlength="1" type="text" inputmode="numeric" oninput="otpIn(this,${i})" onkeydown="otpKey(event,${i})">`).join('')}</div><div class="err-msg" id="otpErr" style="text-align:center"></div><div style="margin-top:13px"><button class="btn btn-primary btn-full" onclick="verifyOtp('${context||''}')">Vérifier →</button></div><div style="text-align:center;margin-top:11px"><button class="resend-lnk" id="resendBtn" onclick="resendOtp()" disabled>Renvoyer (<span id="resendCnt">60</span>s)</button></div><div style="text-align:center;margin-top:7px"><button class="resend-lnk" onclick="${context?'closeOv(\'authOv\')':'switchAuth(\'register\')'}" style="color:var(--txt3)">← ${context?'Annuler':'Modifier mes infos'}</button></div>`;setTimeout(()=>document.getElementById('otp0').focus(),90);let secs=60;resendTimer=setInterval(()=>{secs--;const el=document.getElementById('resendCnt'),btn=document.getElementById('resendBtn');if(!el){clearInterval(resendTimer);return;}if(secs<=0){clearInterval(resendTimer);btn.disabled=false;btn.textContent='Renvoyer le code';}else el.textContent=secs;},1000);}
 function otpIn(el,idx){el.value=el.value.replace(/\D/g,'');if(el.value){el.classList.add('filled');if(idx<5)document.getElementById(`otp${idx+1}`).focus();else verifyOtp('');}else el.classList.remove('filled');}
 function otpKey(e,idx){if(e.key==='Backspace'&&!e.target.value&&idx>0)document.getElementById(`otp${idx-1}`).focus();}
 function getOtp(){return[0,1,2,3,4,5].map(i=>document.getElementById(`otp${i}`)?.value||'').join('');}
-async function verifyOtp(context){const entered=getOtp();const err=document.getElementById('otpErr');if(entered.length<6){err.textContent='✕ Entrez les 6 chiffres';return;}const endpoint=context==='email'?'/api/auth/otp/verify-email':'/api/auth/otp/verify-register';const body=context==='email'?{username:curUser.username,newEmail:pendingEmailChange,code:entered}:{username:pendingReg.u,email:pendingReg.email,password:pendingReg.p,emoji:pendingReg.e,code:entered};const data=await apiPost(endpoint,body);if(data.error){err.textContent='✕ '+data.error;document.querySelectorAll('.otp-in').forEach(el=>{el.classList.add('error');setTimeout(()=>el.classList.remove('error'),500);});return;}clearInterval(resendTimer);if(context==='email'){pendingEmailChange=null;closeOv('authOv');document.querySelectorAll('.auth-tab').forEach(t=>t.style.display='');openSettings();toast('Email mis à jour !');return;}curUser={username:data.username,role:data.role,emoji:data.emoji,token:data.token,admin:data.admin,email:data.email||'',handle:data.handle||'',bio:data.bio||'',bioLong:data.bioLong||'',private:!!data.private};localStorage.setItem('cw_session',JSON.stringify(curUser));pendingReg=null;document.querySelectorAll('.auth-tab').forEach(t=>t.style.display='');closeOv('authOv');await loadMe();updateHdr();renderSup();toast(`✓ Bienvenue, ${data.username} !`);}
+async function verifyOtp(context){const entered=getOtp();const err=document.getElementById('otpErr');if(entered.length<6){err.textContent='✕ Entrez les 6 chiffres';return;}const endpoint=context==='email'?'/api/auth/otp/verify-email':'/api/auth/otp/verify-register';const body=context==='email'?{username:curUser.username,newEmail:pendingEmailChange,code:entered}:{username:pendingReg.u,email:pendingReg.email,password:pendingReg.p,emoji:pendingReg.e,code:entered};const data=await apiPost(endpoint,body);if(data.error){err.textContent='✕ '+data.error;document.querySelectorAll('.otp-in').forEach(el=>{el.classList.add('error');setTimeout(()=>el.classList.remove('error'),500);});return;}clearInterval(resendTimer);if(context==='email'){pendingEmailChange=null;closeOv('authOv');document.querySelectorAll('.auth-tab').forEach(t=>t.style.display='');openSettings();toast('Email mis à jour !');return;}curUser={username:data.username,role:data.role,emoji:data.emoji,token:data.token,admin:data.admin,email:data.email||'',handle:data.handle||'',bio:data.bio||'',bioLong:data.bioLong||'',private:!!data.private};localStorage.setItem('cw_session',JSON.stringify(curUser));const _refCode=pendingReg?.referral;pendingReg=null;document.querySelectorAll('.auth-tab').forEach(t=>t.style.display='');closeOv('authOv');await loadMe();updateHdr();renderSup();toast(`✓ Bienvenue, ${data.username} !`);if(_refCode){const rr=await apiPost('/api/referral/validate',{code:_refCode});if(rr.ok){curUser.capcoins=rr.capcoins;updateCCDisplay();updateHdr();toast(`🎫 Code parrainage activé ! +${rr.reward} CapCoins`);}}}
 async function resendOtp(){const email=pendingReg?.email||pendingEmailChange;if(!email)return;const username=pendingReg?.u||curUser?.username||'';const btn=document.getElementById('resendBtn');btn.disabled=true;btn.textContent='⟳ Envoi...';const data=await apiPost('/api/auth/otp/resend',{username,email});if(data.error){btn.disabled=false;btn.textContent='Renvoyer le code';toast('Erreur d\'envoi','error');return;}let secs=60;btn.innerHTML='Renvoyer (<span id="resendCnt">60</span>s)';resendTimer=setInterval(()=>{secs--;const el=document.getElementById('resendCnt');if(!el){clearInterval(resendTimer);return;}if(secs<=0){clearInterval(resendTimer);btn.disabled=false;btn.textContent='Renvoyer le code';}else el.textContent=secs;},1000);toast('Code renvoyé !');}
 async function doLogin(){const u=document.getElementById('lUser').value.trim();const p=document.getElementById('lPass').value;const err=document.getElementById('lErr');if(!u||!p){err.textContent='✕ Remplissez tous les champs';return;}const data=await apiPost('/api/auth/login',{username:u,password:p});if(data.error){err.textContent='✕ '+data.error;return;}curUser={username:data.username,role:data.role,emoji:data.emoji,token:data.token,admin:data.admin,email:data.email||'',handle:data.handle||'',bio:data.bio||'',bioLong:data.bioLong||'',private:!!data.private};localStorage.setItem('cw_session',JSON.stringify(curUser));await loadMe();closeOv('authOv');updateHdr();renderSup();toast(`Bienvenue, ${u} !`);}
 async function logout(){await setOnline(false);curUser=null;activeTicket=null;adminVerified=false;const sbAdmBtn=document.getElementById('sbAdminBtn');if(sbAdmBtn)sbAdmBtn.style.display='none';localStorage.removeItem('cw_session');updateHdr();renderSup();applyMaintenance();toast('Déconnecté.');}
@@ -2465,6 +2546,7 @@ settSec('👤','Profil',`<div class="fg"><label>Emoji avatar</label><input type=
 settSec('🏷️','Changer le pseudo',`<div class="fg"><label>Nouveau pseudo</label><input type="text" class="inp" id="setUser" value="${esc(curUser.username)}"></div><div id="setUserMsg" class="err-msg" style="margin-bottom:6px"></div><button class="btn btn-ghost btn-sm" onclick="changeUsername()">✎ Changer le pseudo</button>`)+
 settSec('📧','Changer l\'email',`<div class="fg"><label>Nouvel email</label><input type="email" class="inp" id="setEmail" value="${esc(emailVal)}"></div><div id="setEmailMsg" class="err-msg" style="margin-bottom:6px"></div><button class="btn btn-ghost btn-sm" onclick="requestEmailChange()">📤 Changer l\'email</button>`)+
 settSec('🔑','Mot de passe',`<div class="fg"><label>Actuel</label><input type="password" class="inp" id="setPwC"></div><div class="fg"><label>Nouveau</label><input type="password" class="inp" id="setPwN"></div><div class="fg" style="margin-bottom:10px"><label>Confirmer</label><input type="password" class="inp" id="setPwCf"></div><div id="setMsg" class="err-msg" style="margin-bottom:10px"></div><button class="btn btn-primary btn-full" onclick="saveSettings()">💾 Changer le mot de passe</button>`)+
+settSec('🎫','Code parrainage',curUser.referralUsed?`<div style="font-size:.82rem;color:var(--grn)">✓ Code utilisé : <b>${esc(curUser.referralUsed)}</b></div>`:`<div class="fg"><label>Entrez un code parrainage</label><input type="text" class="inp" id="referralInput" placeholder="Ex: FREETOKEN13"></div><button class="btn btn-ghost btn-sm" onclick="submitReferralCode()" style="margin-top:6px">✓ Activer le code</button>`)+
 settSec('🗑','Cache',`<button class="btn btn-danger btn-sm" onclick="clearCache()">🗑 Vider le cache</button>`)+
 `<button class="btn btn-danger btn-full" onclick="logout();closeOv('settOv')">🚪 Se déconnecter</button>`;
 document.getElementById('settOv').classList.add('open');}
@@ -2760,6 +2842,10 @@ function admTab(name){
   if(name==='maintenance'){if(typeof checkQuotaState==='function')checkQuotaState();}
   if(name==='shop')loadAdminShop();
   if(name==='rewards')loadAdminRewards();
+  if(name==='referral')loadAdminReferral();
+  if(name==='themes')loadAdminThemes();
+  if(name==='skins')loadAdminSkins();
+  if(name==='activity')loadAdminActivity();
 }
 
 async function sendBroadcast(){
@@ -3199,7 +3285,8 @@ const PAGE_DEFS=[
   {id:'about',label:'ℹ️ À propos',sidebarId:'sbBtnAbout',navId:'navAbout',sectionId:'about'},
   {id:'contact',label:'✉️ Contact',sidebarId:'sbBtnContact',navId:'navContact',sectionId:'contact'},
   {id:'shop',label:'💰 Boutique',sidebarId:'sbShopBtn',navId:null,sectionId:'pageShop'},
-  {id:'reward',label:'🎁 Récompense',sidebarId:'sbRewardBtn',navId:null,sectionId:'pageReward'}
+  {id:'reward',label:'🎁 Récompense',sidebarId:'sbRewardBtn',navId:null,sectionId:'pageReward'},
+  {id:'leaderboard',label:'🏆 Classement',sidebarId:'sbLeaderBtn',navId:null,sectionId:'pageLeaderboard'}
 ];
 function getPageVisibility(){return (typeof config!=='undefined'&&config.pageVisibility)||{};}
 function renderPagesEditor(){
@@ -3273,6 +3360,7 @@ function showPage(page){
   document.getElementById('pageGame').style.display=page==='game'?'block':'none';
   document.getElementById('pageShop').style.display=page==='shop'?'block':'none';
   document.getElementById('pageReward').style.display=page==='reward'?'block':'none';
+  document.getElementById('pageLeaderboard').style.display=page==='leaderboard'?'block':'none';
   document.querySelectorAll('.cw-sidebar .sb-btn').forEach(b=>b.classList.remove('active'));
   if(page==='home')window.scrollTo({top:0,behavior:'smooth'});
   if(page!=='messages'&&dmPollInterval){clearInterval(dmPollInterval);dmPollInterval=null;}
@@ -3282,6 +3370,7 @@ function showPage(page){
   else if(gameActive)stopGame();
   if(page==='shop')loadShopPage();
   if(page==='reward')loadRewardPage();
+  if(page==='leaderboard')loadLeaderboardPage();
 }
 function goSection(id){
   showPage('home');
@@ -3456,20 +3545,30 @@ async function openDMWith(username){
   const dmMs=Math.max(1000,Math.min(3000,((config&&config.dmCooldown)||1)*1000));
   dmPollInterval=setInterval(loadDMMessages,dmMs);
 }
+let dmReadAt={};
 function renderDMMsg(m, animate){
   const isMine=m.from===curUser.username;
   const cls='dm-msg'+(isMine?' mine':'')+(animate?'':' no-anim');
+  let vuTag='';
+  if(isMine&&currentDMWith&&dmReadAt[currentDMWith]){
+    const theirReadAt=dmReadAt[currentDMWith];
+    if(m.createdAt&&m.createdAt<=theirReadAt)vuTag='<span style="font-size:.6rem;color:var(--accent);margin-left:6px;font-style:italic">vu</span>';
+  }
   return `<div class="${cls}" data-mid="${esc(m.id||'')}">
       <div class="m-ava">${m.emoji||'👤'}</div>
-      <div class="m-body"><div class="m-meta"><span class="m-author">${esc(m.from)}</span><span class="m-time">${m.time||''}</span></div><div class="m-text">${esc(m.text)}</div></div>
+      <div class="m-body"><div class="m-meta"><span class="m-author">${esc(m.from)}</span><span class="m-time">${m.time||''}${vuTag}</span></div><div class="m-text">${esc(m.text)}</div></div>
     </div>`;
 }
 async function loadDMMessages(){
   if(!currentDMWith)return;
   if(Date.now()<dmPollSkipUntil)return;
-  const r=await apiGet('/api/dm/messages?with='+encodeURIComponent(currentDMWith));
+  const raw=await apiGet('/api/dm/messages?with='+encodeURIComponent(currentDMWith));
   const el=document.getElementById('dmMsgs2');
-  if(!el||r.error||!Array.isArray(r))return;
+  if(!el||raw.error)return;
+  let r;
+  if(raw.messages&&Array.isArray(raw.messages)){r=raw.messages;dmReadAt=raw.readAt||{};}
+  else if(Array.isArray(raw)){r=raw;}
+  else return;
   if(!r.length){
     el.innerHTML='<div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--txt3);font-size:.76rem">Commencez la conversation !</div>';
     el.dataset.lastId='';el.dataset.count='0';
@@ -4097,9 +4196,12 @@ async function loadShopPage(){
 function switchShopTab(tab){
   document.getElementById('shopStoreSection').style.display=tab==='store'?'':'none';
   document.getElementById('shopInvSection').style.display=tab==='inventory'?'':'none';
+  document.getElementById('shopCosmeticsSection').style.display=tab==='cosmetics'?'':'none';
   document.getElementById('shopTabStore').className='btn btn-sm '+(tab==='store'?'btn-primary':'btn-ghost');
   document.getElementById('shopTabInv').className='btn btn-sm '+(tab==='inventory'?'btn-primary':'btn-ghost');
+  document.getElementById('shopTabCosmetics').className='btn btn-sm '+(tab==='cosmetics'?'btn-primary':'btn-ghost');
   if(tab==='inventory')loadInventory();
+  if(tab==='cosmetics')loadCosmetics();
 }
 async function loadInventory(){
   const grid=document.getElementById('invGrid');
@@ -4145,9 +4247,93 @@ async function shopBuyCC(itemId,price){
 }
 
 /* ════════════════════════════════════════
+   COSMETICS (themes + skins)
+════════════════════════════════════════ */
+async function loadCosmetics(){
+  const themesEl=document.getElementById('cosmeticThemes');
+  const skinsEl=document.getElementById('cosmeticSkins');
+  themesEl.innerHTML='<div style="color:var(--txt3);font-size:.75rem;padding:12px">Chargement...</div>';
+  skinsEl.innerHTML='<div style="color:var(--txt3);font-size:.75rem;padding:12px">Chargement...</div>';
+  const [themes,skins]=await Promise.all([apiGet('/api/themes'),apiGet('/api/skins')]);
+  const allThemes=[{id:'',name:'Par défaut',bg:'#07070f',accent:'#7c6cff',price:0},...(Array.isArray(themes)?themes:[])];
+  const myTheme=curUser.theme||'';
+  themesEl.innerHTML=allThemes.map(t=>{
+    const active=myTheme===(t.id||t.name||'');
+    return `<div class="shop-card" style="text-align:center;padding:14px;${active?'border-color:var(--accent);box-shadow:0 0 12px rgba(124,108,255,.3)':''}">
+      <div style="width:100%;height:40px;border-radius:8px;margin-bottom:8px;background:${t.bg||'#07070f'};border:2px solid ${t.accent||'#7c6cff'}"></div>
+      <div style="font-weight:700;font-size:.82rem;margin-bottom:4px">${esc(t.name||'Thème')}</div>
+      ${t.price?`<div style="font-size:.72rem;color:var(--cyan);margin-bottom:6px">🪙 ${t.price}</div>`:'<div style="font-size:.72rem;color:var(--grn);margin-bottom:6px">Gratuit</div>'}
+      ${active?'<span style="font-size:.72rem;color:var(--accent);font-weight:700">✓ Équipé</span>':`<button class="btn btn-ghost btn-sm" style="font-size:.7rem" onclick="buyTheme('${esc(t.id||t.name||'')}',${t.price||0})">${t.price?'Acheter':'Équiper'}</button>`}
+    </div>`;
+  }).join('');
+  const mySkin=curUser.snakeSkin||'';
+  const allSkins=[{id:'',name:'Par défaut',color:'#7c6cff',color2:'#22d3ee',price:0,icon:'🐍'},...(Array.isArray(skins)?skins:[])];
+  skinsEl.innerHTML=allSkins.map(s=>{
+    const active=mySkin===(s.id||s.name||'');
+    return `<div class="shop-card" style="text-align:center;padding:14px;${active?'border-color:var(--accent);box-shadow:0 0 12px rgba(124,108,255,.3)':''}">
+      <div style="font-size:2rem;margin-bottom:4px">${s.icon||'🐍'}</div>
+      <div style="display:flex;gap:4px;justify-content:center;margin-bottom:6px"><div style="width:24px;height:24px;border-radius:50%;background:${s.color||'#7c6cff'}"></div><div style="width:24px;height:24px;border-radius:50%;background:${s.color2||'#22d3ee'}"></div></div>
+      <div style="font-weight:700;font-size:.82rem;margin-bottom:4px">${esc(s.name||'Skin')}</div>
+      ${s.price?`<div style="font-size:.72rem;color:var(--cyan);margin-bottom:6px">🪙 ${s.price}</div>`:'<div style="font-size:.72rem;color:var(--grn);margin-bottom:6px">Gratuit</div>'}
+      ${active?'<span style="font-size:.72rem;color:var(--accent);font-weight:700">✓ Équipé</span>':`<button class="btn btn-ghost btn-sm" style="font-size:.7rem" onclick="buySkin('${esc(s.id||s.name||'')}',${s.price||0})">${s.price?'Acheter':'Équiper'}</button>`}
+    </div>`;
+  }).join('');
+}
+async function buyTheme(themeId,price){
+  if(price>0){
+    if((curUser.capcoins||0)<price)return toast('Pas assez de CapCoins','error');
+    if(!confirm(`Acheter ce thème pour ${price} CapCoins ?`))return;
+    const r=await apiPost('/api/shop/buy-cosmetic',{type:'theme',id:themeId,price});
+    if(!r.ok)return toast(r.error||'Erreur','error');
+    curUser.capcoins=r.capcoins;updateCCDisplay();updateHdr();
+  }
+  const r2=await apiPost('/api/user/theme',{theme:themeId});
+  if(r2.ok){curUser.theme=themeId;applyTheme(themeId);toast('Thème appliqué !');loadCosmetics();}
+  else toast(r2.error||'Erreur','error');
+}
+async function buySkin(skinId,price){
+  if(price>0){
+    if((curUser.capcoins||0)<price)return toast('Pas assez de CapCoins','error');
+    if(!confirm(`Acheter ce skin pour ${price} CapCoins ?`))return;
+    const r=await apiPost('/api/shop/buy-cosmetic',{type:'skin',id:skinId,price});
+    if(!r.ok)return toast(r.error||'Erreur','error');
+    curUser.capcoins=r.capcoins;updateCCDisplay();updateHdr();
+  }
+  const r2=await apiPost('/api/user/skin',{skin:skinId});
+  if(r2.ok){curUser.snakeSkin=skinId;toast('Skin équipé !');loadCosmetics();}
+  else toast(r2.error||'Erreur','error');
+}
+
+/* ════════════════════════════════════════
    DAILY REWARD PAGE
 ════════════════════════════════════════ */
 let rewardClaiming=false;
+const STREAK_SEQ_DEFAULT=[5,10,30,50,70,80,'capbox'];
+function streakFlameColor(streak){
+  const t=Math.min(streak,1000)/1000;
+  const r=Math.round(59+(255-59)*t);
+  const g=Math.round(130+(79-130)*t);
+  const b=Math.round(246+(114-246)*t);
+  return `rgb(${r},${g},${b})`;
+}
+function renderStreakSnake(streak,seq,canClaim){
+  const el=document.getElementById('streakSnake');if(!el)return;
+  const step=streak%seq.length;
+  el.innerHTML=seq.map((v,i)=>{
+    const claimed=i<step;
+    const current=i===step;
+    const isBox=v==='capbox';
+    const label=isBox?'📦 CapBox':`🪙 ${v}`;
+    const bg=claimed?'rgba(16,240,153,.2)':current?(canClaim?'rgba(124,108,255,.3)':'rgba(124,108,255,.12)'):'rgba(255,255,255,.04)';
+    const bdr=claimed?'var(--grn)':current?'var(--accent)':'var(--bdr)';
+    const op=claimed?'.7':current?'1':'.5';
+    return `<div style="padding:8px 14px;border-radius:12px;background:${bg};border:1.5px solid ${bdr};opacity:${op};font-size:.78rem;font-weight:600;display:flex;align-items:center;gap:6px;min-width:90px;justify-content:center${current&&canClaim?';animation:pulse 1.5s infinite':''}">${claimed?'✓ ':current?'→ ':''}${label}</div>`;
+  }).join('');
+  const flame=document.getElementById('streakFlame');
+  if(flame)flame.style.color=streakFlameColor(streak);
+  const cnt=document.getElementById('streakCount');
+  if(cnt)cnt.textContent=streak;
+}
 async function loadRewardPage(){
   if(!curUser)return;
   updateCCDisplay();
@@ -4155,15 +4341,19 @@ async function loadRewardPage(){
   const result=document.getElementById('rewardResult');
   const cooldown=document.getElementById('rewardCooldown');
   result.style.display='none';
-  box.style.display='flex';
+  box.style.display='inline-flex';
   box.className='cws-box';
   box.style.opacity='1';
-  document.getElementById('rewardBoxContent').innerHTML='<span style="font-size:3.5rem">📦</span><span style="font-size:.7rem;font-family:var(--mono);color:var(--accent);letter-spacing:1px">CWS</span>';
+  document.getElementById('rewardBoxContent').innerHTML='<span style="font-size:3rem">📦</span><span style="font-size:.65rem;font-family:var(--mono);color:var(--accent);letter-spacing:1px">CWS</span>';
   const cfg=await apiGet('/api/daily-reward/config');
   const cooldownMs=(cfg?.cooldownHours||24)*3600*1000;
   const last=curUser.lastDailyReward||0;
   const now=Date.now();
-  if(last&&now-last<cooldownMs){
+  const streak=curUser.dailyStreak||0;
+  const seq=cfg?.streakRewards||STREAK_SEQ_DEFAULT;
+  const canClaim=!last||now-last>=cooldownMs;
+  renderStreakSnake(streak,seq,canClaim);
+  if(!canClaim){
     const remaining=Math.ceil((cooldownMs-(now-last))/1000);
     cooldown.style.display='block';
     cooldown.innerHTML=`⏳ Prochaine récompense dans <b>${formatCooldownJS(remaining)}</b>`;
@@ -4214,11 +4404,185 @@ async function claimDailyReward(){
   result.className='reward-reveal';
   curUser.capcoins=res.capcoins;
   curUser.lastDailyReward=Date.now();
+  curUser.dailyStreak=res.streak||((curUser.dailyStreak||0)+1);
   updateCCDisplay();
   updateHdr();
+  const seq=res.streakSeq||cfg?.streakRewards||STREAK_SEQ_DEFAULT;
+  renderStreakSnake(curUser.dailyStreak,seq,false);
   cooldown.style.display='block';
   cooldown.innerHTML=`⏳ Prochaine récompense dans <b>${(cfg?.cooldownHours||24)}h 0min</b>`;
   rewardClaiming=false;
+}
+
+/* ════════════════════════════════════════
+   LEADERBOARD PAGE
+════════════════════════════════════════ */
+async function loadLeaderboardPage(){
+  const grid=document.getElementById('leaderGrid');
+  const feed=document.getElementById('publicActivityFeed');
+  grid.innerHTML='<div style="color:var(--txt3);font-size:.75rem;text-align:center;padding:20px">Chargement...</div>';
+  feed.innerHTML='<div style="color:var(--txt3);font-size:.75rem;text-align:center;padding:20px">Chargement...</div>';
+  const [top,acts]=await Promise.all([apiGet('/api/game/stats/top'),apiGet('/api/activity?limit=50')]);
+  if(Array.isArray(top)&&top.length){
+    grid.innerHTML=top.map((p,i)=>{
+      const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':`<span style="color:var(--txt3);font-family:var(--mono);font-size:.75rem">#${i+1}</span>`;
+      return `<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surf);border:1px solid var(--bdr);border-radius:12px${i<3?';border-color:var(--accent)':''}">
+        <div style="width:28px;text-align:center">${medal}</div>
+        <div style="font-size:1.2rem">${p.emoji||'🐍'}</div>
+        <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.85rem">${esc(p.username)}</div><div style="font-size:.68rem;color:var(--txt3)">${p.gamesPlayed} parties</div></div>
+        <div style="font-family:var(--mono);font-weight:800;color:var(--gold);font-size:1rem">${p.highScore} ⭐</div>
+      </div>`;
+    }).join('');
+  }else{grid.innerHTML='<div style="color:var(--txt3);font-size:.75rem;text-align:center;padding:20px">Aucun score enregistré</div>';}
+  if(Array.isArray(acts)&&acts.length){
+    feed.innerHTML=acts.map(a=>{
+      const d=a.at?new Date(a.at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+      return `<div style="padding:6px 10px;background:var(--surf);border-radius:8px;font-size:.78rem;display:flex;align-items:center;gap:8px;border:1px solid var(--bdr)"><span style="flex:1">${esc(a.text||'')}</span><span style="color:var(--txt3);font-size:.65rem;font-family:var(--mono);white-space:nowrap">${d}</span></div>`;
+    }).join('');
+  }else{feed.innerHTML='<div style="color:var(--txt3);font-size:.75rem;text-align:center;padding:20px">Aucune activité</div>';}
+}
+
+/* ════════════════════════════════════════
+   THEME SYSTEM
+════════════════════════════════════════ */
+const BUILTIN_THEMES={
+  '':null,
+  'ocean':{bg:'#0a1628',bg2:'#0f1d30',surf:'#132640',surf2:'#1a3050',accent:'#0ea5e9',cyan:'#22d3ee',txt:'#e0f2fe'},
+  'forest':{bg:'#0a150a',bg2:'#0f1f0f',surf:'#132013',surf2:'#1a2e1a',accent:'#22c55e',cyan:'#4ade80',txt:'#dcfce7'},
+  'sunset':{bg:'#1a0a0a',bg2:'#251010',surf:'#2d1515',surf2:'#3a1e1e',accent:'#f97316',cyan:'#fb923c',txt:'#fff1e6'},
+  'candy':{bg:'#1a0a1a',bg2:'#250f25',surf:'#2d152d',surf2:'#3a1e3a',accent:'#ec4899',cyan:'#f472b6',txt:'#fce7f3'}
+};
+function applyTheme(themeId){
+  const t=BUILTIN_THEMES[themeId];
+  const r=document.documentElement;
+  if(!t){r.removeAttribute('data-theme');['--bg','--bg2','--surf','--surf2','--accent','--cyan','--txt'].forEach(v=>r.style.removeProperty(v));return;}
+  Object.entries(t).forEach(([k,v])=>r.style.setProperty('--'+k,v));
+}
+
+/* ════════════════════════════════════════
+   REFERRAL CODE INPUT (profile)
+════════════════════════════════════════ */
+async function submitReferralCode(){
+  const inp=document.getElementById('referralInput');
+  if(!inp)return;
+  const code=inp.value.trim();
+  if(!code){toast('Entrez un code','error');return;}
+  const r=await apiPost('/api/referral/validate',{code});
+  if(r.ok){
+    curUser.capcoins=r.capcoins;
+    curUser.referralUsed=code;
+    updateCCDisplay();updateHdr();
+    toast(`Code activé ! +${r.reward} CapCoins`);
+    inp.disabled=true;
+    inp.value=code+' ✓';
+  }else{toast(r.error||'Erreur','error');}
+}
+
+/* ════════════════════════════════════════
+   ADMIN: REFERRAL TOKENS
+════════════════════════════════════════ */
+let adminReferralTokens=[];
+async function loadAdminReferral(){
+  const r=await apiGet('/api/admin/referral/tokens');
+  adminReferralTokens=Array.isArray(r)?r:[];
+  renderReferralList();
+}
+function renderReferralList(){
+  const el=document.getElementById('referralTokensList');if(!el)return;
+  if(!adminReferralTokens.length){el.innerHTML='<div style="color:var(--txt3);font-size:.75rem">Aucun code</div>';return;}
+  el.innerHTML=adminReferralTokens.map((t,i)=>`<div class="a-card" style="margin-bottom:8px;padding:10px">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+      <div class="fg" style="flex:1;min-width:120px"><label>Code</label><input class="inp" value="${esc(t.code||'')}" onchange="adminReferralTokens[${i}].code=this.value"></div>
+      <div class="fg" style="width:100px"><label>Récompense créateur</label><input type="number" class="inp" value="${t.ownerReward||100}" onchange="adminReferralTokens[${i}].ownerReward=+this.value"></div>
+      <div class="fg" style="width:100px"><label>Récompense nouvel user</label><input type="number" class="inp" value="${t.newUserReward||20}" onchange="adminReferralTokens[${i}].newUserReward=+this.value"></div>
+      <div class="fg" style="width:100px"><label>Type</label><select class="inp" onchange="adminReferralTokens[${i}].rewardType=this.value"><option value="capcoins"${t.rewardType!=='custom'?' selected':''}>CapCoins</option><option value="custom"${t.rewardType==='custom'?' selected':''}>Custom</option></select></div>
+      <div class="fg" style="width:80px"><label>Max uses</label><input type="number" class="inp" value="${t.maxUses||0}" onchange="adminReferralTokens[${i}].maxUses=+this.value" title="0=illimité"></div>
+      <div class="fg" style="width:60px"><label>Uses</label><span style="font-family:var(--mono);font-size:.8rem">${t.uses||0}</span></div>
+      <button class="btn btn-danger btn-sm" onclick="adminReferralTokens.splice(${i},1);renderReferralList()">✕</button>
+    </div>
+  </div>`).join('');
+}
+function addReferralRow(){adminReferralTokens.push({code:'CODE'+Date.now().toString(36).toUpperCase().slice(-5),ownerReward:100,newUserReward:20,rewardType:'capcoins',maxUses:0,uses:0,active:true});renderReferralList();}
+async function saveReferralTokens(){
+  const r=await apiPost('/api/admin/referral/tokens',{tokens:adminReferralTokens});
+  const m=document.getElementById('refSaveMsg');
+  if(r.ok){if(m){m.style.display='block';m.textContent='✓ Sauvegardé';setTimeout(()=>m.style.display='none',2500);}toast('Codes sauvegardés !');}
+  else{toast(r.error||'Erreur','error');}
+}
+
+/* ════════════════════════════════════════
+   ADMIN: THEMES
+════════════════════════════════════════ */
+let adminThemes=[];
+async function loadAdminThemes(){
+  const r=await apiGet('/api/admin/themes');
+  adminThemes=Array.isArray(r)?r:[];
+  renderThemesList();
+}
+function renderThemesList(){
+  const el=document.getElementById('themesList');if(!el)return;
+  if(!adminThemes.length){el.innerHTML='<div style="color:var(--txt3);font-size:.75rem">Aucun thème (les thèmes par défaut sont toujours disponibles)</div>';return;}
+  el.innerHTML=adminThemes.map((t,i)=>`<div class="a-card" style="margin-bottom:8px;padding:10px">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+      <div class="fg" style="flex:1;min-width:100px"><label>Nom</label><input class="inp" value="${esc(t.name||'')}" onchange="adminThemes[${i}].name=this.value"></div>
+      <div class="fg" style="width:80px"><label>Fond</label><input type="color" value="${t.bg||'#07070f'}" onchange="adminThemes[${i}].bg=this.value" style="width:100%;height:30px;border:none;cursor:pointer"></div>
+      <div class="fg" style="width:80px"><label>Accent</label><input type="color" value="${t.accent||'#7c6cff'}" onchange="adminThemes[${i}].accent=this.value" style="width:100%;height:30px;border:none;cursor:pointer"></div>
+      <div class="fg" style="width:80px"><label>Prix CC</label><input type="number" class="inp" value="${t.price||0}" onchange="adminThemes[${i}].price=+this.value"></div>
+      <button class="btn btn-danger btn-sm" onclick="adminThemes.splice(${i},1);renderThemesList()">✕</button>
+    </div>
+  </div>`).join('');
+}
+function addThemeRow(){adminThemes.push({name:'Nouveau thème',bg:'#0a1628',accent:'#0ea5e9',price:50});renderThemesList();}
+async function saveThemes(){
+  const r=await apiPut('/api/admin/themes',{themes:adminThemes});
+  const m=document.getElementById('themeSaveMsg');
+  if(r.ok||!r.error){if(m){m.style.display='block';m.textContent='✓ Sauvegardé';setTimeout(()=>m.style.display='none',2500);}toast('Thèmes sauvegardés !');}
+  else{toast(r.error||'Erreur','error');}
+}
+
+/* ════════════════════════════════════════
+   ADMIN: SNAKE SKINS
+════════════════════════════════════════ */
+let adminSkins=[];
+async function loadAdminSkins(){
+  const r=await apiGet('/api/admin/skins');
+  adminSkins=Array.isArray(r)?r:[];
+  renderSkinsList();
+}
+function renderSkinsList(){
+  const el=document.getElementById('skinsList');if(!el)return;
+  if(!adminSkins.length){el.innerHTML='<div style="color:var(--txt3);font-size:.75rem">Aucun skin</div>';return;}
+  el.innerHTML=adminSkins.map((s,i)=>`<div class="a-card" style="margin-bottom:8px;padding:10px">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+      <div class="fg" style="flex:1;min-width:100px"><label>Nom</label><input class="inp" value="${esc(s.name||'')}" onchange="adminSkins[${i}].name=this.value"></div>
+      <div class="fg" style="width:80px"><label>Couleur</label><input type="color" value="${s.color||'#7c6cff'}" onchange="adminSkins[${i}].color=this.value" style="width:100%;height:30px;border:none;cursor:pointer"></div>
+      <div class="fg" style="width:80px"><label>Couleur 2</label><input type="color" value="${s.color2||'#22d3ee'}" onchange="adminSkins[${i}].color2=this.value" style="width:100%;height:30px;border:none;cursor:pointer"></div>
+      <div class="fg" style="width:80px"><label>Prix CC</label><input type="number" class="inp" value="${s.price||0}" onchange="adminSkins[${i}].price=+this.value"></div>
+      <div class="fg" style="width:80px"><label>Emoji</label><input class="inp" value="${esc(s.icon||'🐍')}" maxlength="2" onchange="adminSkins[${i}].icon=this.value"></div>
+      <button class="btn btn-danger btn-sm" onclick="adminSkins.splice(${i},1);renderSkinsList()">✕</button>
+    </div>
+  </div>`).join('');
+}
+function addSkinRow(){adminSkins.push({name:'Nouveau skin',color:'#ff4f72',color2:'#fbbf24',price:100,icon:'🐍'});renderSkinsList();}
+async function saveSkins(){
+  const r=await apiPut('/api/admin/skins',{skins:adminSkins});
+  const m=document.getElementById('skinSaveMsg');
+  if(r.ok||!r.error){if(m){m.style.display='block';m.textContent='✓ Sauvegardé';setTimeout(()=>m.style.display='none',2500);}toast('Skins sauvegardés !');}
+  else{toast(r.error||'Erreur','error');}
+}
+
+/* ════════════════════════════════════════
+   ADMIN: ACTIVITY FEED
+════════════════════════════════════════ */
+async function loadAdminActivity(){
+  const el=document.getElementById('activityList');if(!el)return;
+  el.innerHTML='<div style="color:var(--txt3);font-size:.75rem;text-align:center;padding:20px">Chargement...</div>';
+  const acts=await apiGet('/api/activity?limit=100');
+  if(!Array.isArray(acts)||!acts.length){el.innerHTML='<div style="color:var(--txt3);font-size:.75rem;text-align:center;padding:20px">Aucune activité</div>';return;}
+  el.innerHTML=acts.map(a=>{
+    const d=a.at?new Date(a.at).toLocaleString('fr-FR'):'';
+    return `<div style="padding:8px 12px;background:var(--surf);border:1px solid var(--bdr);border-radius:8px;margin-bottom:4px;font-size:.78rem;display:flex;justify-content:space-between;gap:8px"><span>${esc(a.text||'')}</span><span style="color:var(--txt3);font-size:.65rem;font-family:var(--mono);white-space:nowrap">${d}</span></div>`;
+  }).join('');
 }
 
 /* ════════════════════════════════════════
