@@ -1979,7 +1979,7 @@ async function loadMe(){
   if(me.role)curUser.role=me.role;
   // SEULE source d'autorité pour afficher le bouton Admin :
   // confirmation serveur via /api/user/me (route signée JWT).
-  adminVerified=(me.role==='owner');
+  adminVerified=(me.role==='owner'||me.admin===true);
   const sbAdmBtn=document.getElementById('sbAdminBtn');if(sbAdmBtn)sbAdmBtn.style.display=adminVerified?'':'none';
   // CapCoins data
   curUser.capcoins=me.capcoins||0;
@@ -4385,8 +4385,9 @@ async function claimDailyReward(){
   const res=await apiPost('/api/daily-reward',{});
   if(!res.ok){
     box.className='cws-box';
+    box.style.display='inline-flex';
     rewardClaiming=false;
-    if(res.error)alert(res.error);
+    if(res.error)toast(res.error,'error');
     return;
   }
   box.className='cws-box opening';
