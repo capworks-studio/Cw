@@ -220,13 +220,6 @@ select.inp{cursor:pointer}
   <main class="content" id="content"></main>
 </div>
 
-<!-- PROJECT FORM MODAL -->
-<div class="overlay" id="projFormOv" onclick="ovClick(event,'projFormOv')">
-  <div class="modal">
-    <div class="modal-hd"><h3 id="projFormTitle">Nouveau projet</h3><button class="x-btn" onclick="closeOv('projFormOv')">✕</button></div>
-    <div class="modal-bd" id="projFormBody"></div>
-  </div>
-</div>
 
 <!-- GENERIC FORM MODAL (campaigns / team) -->
 <div class="overlay" id="genFormOv" onclick="ovClick(event,'genFormOv')">
@@ -329,9 +322,10 @@ function switchView(view){
 
 /* ══════════════ PROJECTS ══════════════ */
 function renderProjectsView(c){
-  c.innerHTML=`<h2>🗂 Projets</h2><div class="sub">Gérez les projets affichés sur la page Projets.</div>
+  c.innerHTML=`<h2>🗂 Projets</h2><div class="sub">Gérez les projets affichés sur la page Projets — chaque catégorie a son propre formulaire.</div>
   <div class="cat-tabs" id="projCatTabs">${CATS.map(cat=>`<div class="cat-tab${cat===activeCat?' active':''}" onclick="setProjCat('${cat}')">${CAT_META[cat].icon} ${CAT_META[cat].label} <span style="font-family:var(--mono);font-size:.6rem;opacity:.6">(${projects[cat].length})</span></div>`).join('')}</div>
-  <div style="margin-bottom:14px"><button class="btn btn-primary btn-sm" onclick="openProjForm('${activeCat}')">+ Ajouter un projet</button></div>
+  <div style="margin-bottom:14px"><button class="btn btn-primary btn-sm" id="projAddBtn" onclick="openProjForm('${activeCat}')">+ Ajouter — ${CAT_META[activeCat].label}</button></div>
+  <div id="projFormInline" style="display:none;margin-bottom:18px"></div>
   <div id="projList"></div>`;
   renderProjList();
 }
@@ -411,8 +405,12 @@ function treeToText(folders,files){
 
 function openProjForm(cat,id){
   const proj=id?projects[cat].find(p=>p.id===id):{};
-  $('projFormTitle').textContent=id?`✏️ Modifier — ${CAT_META[cat].label}`:`+ Nouveau — ${CAT_META[cat].label}`;
-  let html=`<input type="hidden" id="pf_cat" value="${cat}"><input type="hidden" id="pf_id" value="${id||''}">`;
+  let html=`<div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <h3 style="margin:0">${id?`✏️ Modifier — ${CAT_META[cat].label}`:`+ Nouveau — ${CAT_META[cat].label}`}</h3>
+      <button class="x-btn" onclick="closeProjForm()">✕</button>
+    </div>
+    <input type="hidden" id="pf_cat" value="${cat}"><input type="hidden" id="pf_id" value="${id||''}">`;
   html+=`<div class="fieldset-title">Informations générales</div>`;
   COMMON_FIELDS.forEach(([fid,label,type])=>html+=fieldHtml(fid,label,type));
   html+=`<div class="fieldset-title">Spécifique — ${CAT_META[cat].label}</div>`;
@@ -428,8 +426,14 @@ function openProjForm(cat,id){
       <div class="fg"><label>Vues</label><input type="number" class="inp" id="pf_views"></div>
     </div>
     <div class="fg"><label>Téléchargements</label><input type="number" class="inp" id="pf_downloads"></div>
-    <button class="btn btn-primary btn-full" onclick="saveProj()" style="margin-top:6px">💾 Enregistrer</button>`;
-  $('projFormBody').innerHTML=html;
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <button class="btn btn-primary" style="flex:1" onclick="saveProj()">💾 Enregistrer</button>
+      <button class="btn btn-ghost" onclick="closeProjForm()">Annuler</button>
+    </div>
+  </div>`;
+  const wrap=$('projFormInline');
+  wrap.innerHTML=html;
+  wrap.style.display='block';
 
   // populate values
   const all=[...COMMON_FIELDS,...(CAT_FIELDS[cat]||[])];
@@ -441,8 +445,9 @@ function openProjForm(cat,id){
   setTog('pf_highlightOn_tog',!!proj.highlightOn);
   setTog('pf_hidden_tog',!!proj.hidden);
   $('pf_likes').value=proj.likes||0; $('pf_views').value=proj.views||0; $('pf_downloads').value=proj.downloads||0;
-  $('projFormOv').classList.add('open');
+  wrap.scrollIntoView({behavior:'smooth',block:'start'});
 }
+function closeProjForm(){ const wrap=$('projFormInline'); if(wrap){ wrap.style.display='none'; wrap.innerHTML=''; } }
 function setTog(id,on){ const el=$(id); if(el)el.classList.toggle('on',on); }
 function toggleTog(btn){ btn.classList.toggle('on'); }
 
@@ -468,7 +473,7 @@ async function saveProj(){
     if(id){ await FB.updateDoc(FB.doc(db,`projects_${cat}`,id),data); const idx=projects[cat].findIndex(p=>p.id===id); projects[cat][idx]={...projects[cat][idx],...data,id}; }
     else { const ref=await FB.addDoc(FB.collection(db,`projects_${cat}`),data); projects[cat].push({id:ref.id,...data}); }
     projects[cat].sort((a,b)=>(a.order||999)-(b.order||999));
-    closeOv('projFormOv'); toast('Projet enregistré !'); renderProjList();
+    closeProjForm(); toast('Projet enregistré !'); renderProjList();
   }catch(e){ toast('Erreur : '+e.message,'error'); }
 }
 
