@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>CapWorks</title>
 
 <style>
@@ -13,6 +13,11 @@ box-sizing:border-box;
 font-family:'Segoe UI',sans-serif;
 }
 
+html,body{
+width:100%;
+height:100%;
+}
+
 body{
 height:100vh;
 overflow:hidden;
@@ -21,35 +26,43 @@ display:flex;
 justify-content:center;
 align-items:center;
 perspective:1200px;
+position:relative;
 }
 
 /* ===== BACKGROUND ===== */
 body::before{
 content:"";
 position:absolute;
-width:220%;
-height:220%;
+top:50%;left:50%;
+width:220vmax;
+height:220vmax;
+transform:translate(-50%,-50%);
 background:
 radial-gradient(circle at 20% 30%, #00ffff25, transparent 25%),
 radial-gradient(circle at 80% 70%, #ff00ff20, transparent 25%),
 radial-gradient(circle at 50% 50%, #0066ff25, transparent 35%);
 animation:bgMove 18s linear infinite;
+pointer-events:none;
+z-index:0;
 }
 
 @keyframes bgMove{
-from{transform:rotate(0deg);}
-to{transform:rotate(360deg);}
+from{transform:translate(-50%,-50%) rotate(0deg);}
+to{transform:translate(-50%,-50%) rotate(360deg);}
 }
 
 /* ===== LIGNES ===== */
 .line{
 position:absolute;
+top:0;
 width:2px;
 height:260px;
 background:linear-gradient(transparent,#00ffffaa,transparent);
 filter:blur(1px);
 opacity:.8;
 animation:fall linear infinite;
+pointer-events:none;
+z-index:0;
 }
 
 @keyframes fall{
@@ -71,6 +84,7 @@ transform-style:preserve-3d;
 transition:transform .15s ease-out;
 text-align:center;
 padding:20px;
+max-width:100%;
 }
 
 /* ===== LOGO ===== */
@@ -83,6 +97,7 @@ gap:2px;
 transform-style:preserve-3d;
 flex-wrap:wrap;
 justify-content:center;
+line-height:1;
 }
 
 .logo span{
@@ -148,10 +163,26 @@ backdrop-filter:blur(12px);
 box-shadow:0 0 18px rgba(0,255,255,0.5);
 transition:.35s;
 transform:translateZ(40px);
+-webkit-tap-highlight-color:transparent;
 }
 
 .enter-btn:hover{
 transform:translateZ(60px) translateY(-5px) scale(1.06);
+}
+
+/* ===== TILT HINT (mobile) ===== */
+.tilt-hint{
+font-size:.75rem;
+letter-spacing:2px;
+color:#7a8bbf;
+opacity:.8;
+transform:translateZ(20px);
+display:none;
+cursor:pointer;
+border:1px solid rgba(0,255,255,.25);
+border-radius:999px;
+padding:8px 18px;
+background:rgba(255,255,255,0.02);
 }
 
 /* ===== MAINTENANCE ===== */
@@ -175,12 +206,13 @@ display:none;
 @media (max-width:768px){
 
 .logo{
-font-size:3.5rem;
-letter-spacing:6px;
+font-size:3rem;
+letter-spacing:4px;
+gap:1px;
 }
 
 .subtitle{
-font-size:.85rem;
+font-size:.78rem;
 letter-spacing:3px;
 }
 
@@ -191,10 +223,20 @@ font-size:1rem;
 
 }
 
+@media (max-width:380px){
+.logo{
+font-size:2.4rem;
+letter-spacing:3px;
+}
+}
+
 /* ===== TOUCH OPTIMISATION ===== */
 @media (hover:none){
 .enter-btn:hover{
 transform:translateZ(40px);
+}
+.container{
+transform:none !important;
 }
 }
 
@@ -217,6 +259,8 @@ DÉVELOPPEMENT • CRÉATIVITÉ • PASSION
 Entrer dans l'univers →
 </a>
 
+<div class="tilt-hint" id="tiltHint">✨ Touchez pour activer l'effet 3D</div>
+
 <div class="maintenance" id="maintenance">
 ⚠️ Le site est actuellement indisponible.<br>
 Ce site est en cours de rénovation afin de vous offrir une meilleure expérience.
@@ -230,6 +274,8 @@ const IS_MAINTENANCE = false;
 
 const btn = document.getElementById("btn");
 const maintenance = document.getElementById("maintenance");
+const scene = document.getElementById("scene");
+const tiltHint = document.getElementById("tiltHint");
 
 if(IS_MAINTENANCE){
 btn.removeAttribute("href");
@@ -237,8 +283,9 @@ btn.textContent = "Bientôt disponible";
 maintenance.style.display = "block";
 }
 
-/* ===== LIGNES ===== */
-for(let i=25;i--;){
+/* ===== LIGNES (moins nombreuses sur petit écran pour la perf) ===== */
+const lineCount = window.innerWidth < 600 ? 14 : 25;
+for(let i=lineCount;i--;){
 const l=document.createElement("div");
 l.className="line";
 l.style.left=Math.random()*100+"vw";
@@ -247,11 +294,9 @@ l.style.animationDelay=(-Math.random()*10)+"s";
 document.body.appendChild(l);
 }
 
-const scene=document.getElementById("scene");
+const isTouch = window.matchMedia("(hover:none)").matches;
 
-let isTouch = window.matchMedia("(hover:none)").matches;
-
-/* ===== PC : souris ===== */
+/* ===== PC : tilt à la souris ===== */
 if(!isTouch){
 document.addEventListener("mousemove",(e)=>{
 const x=(e.clientX/window.innerWidth - 0.5)*18;
@@ -260,14 +305,37 @@ scene.style.transform=`rotateY(${x}deg) rotateX(${-y}deg)`;
 });
 }
 
-/* ===== MOBILE : gyroscope ===== */
-window.addEventListener("deviceorientation",(e)=>{
-if(isTouch && e.beta && e.gamma){
-const x = (e.gamma/45)*10;
-const y = (e.beta/45)*10;
-scene.style.transform=`rotateY(${x}deg) rotateX(${y}deg)`;
+/* ===== MOBILE : gyroscope, activé via tap (requis sur iOS 13+) ===== */
+if(isTouch){
+const needsPermission = typeof DeviceOrientationEvent !== "undefined"
+  && typeof DeviceOrientationEvent.requestPermission === "function";
+
+function startTilt(){
+  let lastX=0,lastY=0;
+  window.addEventListener("deviceorientation",(e)=>{
+    if(e.beta==null || e.gamma==null)return;
+    const x=Math.max(-10,Math.min(10,(e.gamma/45)*10));
+    const y=Math.max(-10,Math.min(10,(e.beta/45)*10));
+    lastX=lastX*0.85+x*0.15;
+    lastY=lastY*0.85+y*0.15;
+    scene.style.transform=`rotateY(${lastX}deg) rotateX(${lastY}deg)`;
+  });
 }
-});
+
+if(needsPermission){
+  tiltHint.style.display="inline-block";
+  tiltHint.addEventListener("click",async ()=>{
+    try{
+      const res=await DeviceOrientationEvent.requestPermission();
+      if(res==="granted"){ startTilt(); tiltHint.style.display="none"; }
+      else { tiltHint.textContent="Permission refusée"; }
+    }catch(err){ tiltHint.style.display="none"; }
+  },{once:false});
+} else if("DeviceOrientationEvent" in window){
+  // Android / navigateurs sans permission explicite
+  startTilt();
+}
+}
 
 </script>
 
