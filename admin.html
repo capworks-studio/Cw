@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CapWorks Studio — Admin</title>
+<link rel="icon" type="image/png" href="CWS_Logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<script type="module">
+  import { initializeApp }    from 'https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js';
+  import { getFirestore, collection, doc, getDocs, getDoc, setDoc, addDoc, updateDoc, deleteDoc, increment }
+    from 'https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js';
+  const firebaseConfig = {
+    apiKey:            "AIzaSyAJOq0GjS7g75RPyL5WsqKogXp9K1Qja7M",
+    authDomain:        "capworks-studio-fr.firebaseapp.com",
+    databaseURL:       "https://capworks-studio-fr-default-rtdb.firebaseio.com",
+    projectId:         "capworks-studio-fr",
+    storageBucket:     "capworks-studio-fr.firebasestorage.app",
+    messagingSenderId: "466455700751",
+    appId:             "1:466455700751:web:6ca548df73dd8e47b70a7a",
+    measurementId:     "G-8DMZPBS6J3"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+  window.__db = db;
+  window.__firebase = { collection, doc, getDocs, getDoc, setDoc, addDoc, updateDoc, deleteDoc, increment };
+  window.__firebaseReady = true;
+  document.dispatchEvent(new Event('firebase-ready'));
+</script>
+
+<style>
+:root {
+  --bg:#06060e; --bg2:#0b0b18; --surf:#0f0f1e; --surf2:#141428; --surf3:#1a1a32;
+  --bdr:#1e1e38; --bdr2:#2a2a4a;
+  --accent:#6c5ce7; --accentd:#4a3bb5; --accentg:rgba(108,92,231,.18);
+  --cyan:#00cec9; --cyang:rgba(0,206,201,.14);
+  --grn:#00b894; --grng:rgba(0,184,148,.14);
+  --red:#e84393; --redg:rgba(232,67,147,.14);
+  --gold:#fdcb6e; --goldg:rgba(253,203,110,.12);
+  --txt:#e8e8f8; --txt2:#8888aa; --txt3:#3a3a5c;
+  --font:'Space Grotesk',sans-serif; --display:'Syne',sans-serif; --mono:'JetBrains Mono',monospace;
+  --r:8px; --r2:14px; --r3:20px;
+  --cat-sites:#00cec9; --cat-games:#6c5ce7; --cat-software:#00b894; --cat-animations:#ff6ab0;
+  --cat-bots:#fdcb6e; --cat-ai:#a78bfa; --cat-assets:#fb923c; --cat-other:#8888aa;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--txt);min-height:100vh}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:2px}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes modalIn{from{opacity:0;transform:scale(.94) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+
+/* HEADER */
+header{position:sticky;top:0;z-index:100;height:60px;padding:0 28px;display:flex;align-items:center;justify-content:space-between;
+  background:rgba(6,6,14,.94);backdrop-filter:blur(20px);border-bottom:1px solid var(--bdr)}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--txt);font-family:var(--display);font-size:1.05rem;font-weight:700;letter-spacing:-.3px}
+.logo-img{width:32px;height:32px;border-radius:9px;overflow:hidden;background:linear-gradient(135deg,var(--accent),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:1rem}
+.logo-img img{width:100%;height:100%;object-fit:cover}
+.logo em{font-style:normal;color:var(--cyan)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 16px;border-radius:var(--r);font-family:var(--font);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .18s;border:none;text-decoration:none;line-height:1.2;white-space:nowrap}
+.btn:active{transform:scale(.96)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:linear-gradient(135deg,var(--accent),#8b7cf8);color:#fff}
+.btn-primary:hover{transform:translateY(-1px)}
+.btn-gold{background:linear-gradient(135deg,#e0a800,var(--gold));color:#111;font-weight:700}
+.btn-ghost{background:transparent;border:1px solid var(--bdr2);color:var(--txt2)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn-danger{background:var(--redg);border:1px solid rgba(232,67,147,.3);color:var(--red)}
+.btn-danger:hover{background:rgba(232,67,147,.25)}
+.btn-sm{padding:5px 12px;font-size:.73rem;border-radius:7px}
+.btn-full{width:100%}
+
+/* INPUTS */
+.inp{width:100%;background:var(--surf2);border:1.5px solid var(--bdr2);color:var(--txt);padding:8px 12px;border-radius:var(--r);font-family:var(--font);font-size:.8rem;outline:none;transition:border-color .2s}
+.inp:focus{border-color:var(--accent)}
+.inp::placeholder{color:var(--txt3)}
+textarea.inp{resize:vertical;min-height:70px;font-family:var(--mono);font-size:.74rem}
+select.inp{cursor:pointer}
+.fg{margin-bottom:11px}
+.fg label{display:block;font-size:.62rem;font-weight:700;color:var(--txt2);letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px}
+.fg-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tog-row{display:flex;align-items:center;justify-content:space-between;background:var(--surf2);border:1px solid var(--bdr2);border-radius:var(--r);padding:9px 13px;margin-bottom:11px}
+.tog-row label{font-size:.78rem;font-weight:600;color:var(--txt)}
+.tog-btn{position:relative;width:38px;height:21px;border-radius:99px;background:var(--bdr2);border:none;cursor:pointer;transition:background .2s;flex-shrink:0}
+.tog-btn::after{content:'';position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:50%;background:var(--txt);transition:transform .2s}
+.tog-btn.on{background:var(--accent)}
+.tog-btn.on::after{transform:translateX(17px);background:#fff}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:200px 1fr;min-height:calc(100vh - 60px)}
+.sidebar{border-right:1px solid var(--bdr);padding:18px 12px;background:var(--surf)}
+.side-section{margin-bottom:6px}
+.side-title{font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:var(--txt3);padding:10px 12px 4px;font-weight:700}
+.side-link{display:flex;align-items:center;gap:9px;padding:8px 12px;border-radius:8px;color:var(--txt2);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .15s;margin-bottom:1px}
+.side-link:hover{background:var(--surf2);color:var(--txt)}
+.side-link.active{background:rgba(108,92,231,.12);color:var(--accent)}
+.side-link .cnt{margin-left:auto;font-family:var(--mono);font-size:.62rem;color:var(--txt3);background:var(--surf3);padding:1px 6px;border-radius:99px}
+
+.content{padding:26px 32px;max-width:1100px}
+.content h2{font-family:var(--display);font-size:1.4rem;font-weight:800;letter-spacing:-.5px;margin-bottom:4px}
+.content .sub{color:var(--txt2);font-size:.8rem;margin-bottom:22px}
+
+/* PROJECT LIST */
+.item-row{display:flex;align-items:center;gap:12px;background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r2);padding:12px 16px;margin-bottom:8px;animation:fadeUp .3s ease both}
+.item-row:hover{border-color:var(--bdr2)}
+.item-thumb{width:54px;height:36px;border-radius:7px;background:var(--surf2);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+.item-thumb img{width:100%;height:100%;object-fit:cover}
+.item-main{flex:1;min-width:0}
+.item-title{font-size:.86rem;font-weight:700;display:flex;align-items:center;gap:7px}
+.item-meta{font-size:.7rem;color:var(--txt3);margin-top:2px;font-family:var(--mono)}
+.item-badge{font-size:.58rem;padding:1px 6px;border-radius:5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.item-badge.hidden{background:var(--redg);color:var(--red);border:1px solid rgba(232,67,147,.3)}
+.item-badge.hl{background:var(--goldg);color:var(--gold);border:1px solid rgba(253,203,110,.3)}
+.item-actions{display:flex;gap:6px;flex-shrink:0}
+
+/* CARD / SECTION */
+.card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r2);padding:20px}
+.card+.card{margin-top:14px}
+.card h3{font-size:.92rem;font-weight:700;margin-bottom:14px;font-family:var(--display)}
+.cat-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
+.cat-tab{padding:7px 14px;border-radius:99px;font-size:.76rem;font-weight:600;cursor:pointer;background:var(--surf2);border:1px solid var(--bdr2);color:var(--txt2);transition:all .15s}
+.cat-tab.active{background:rgba(108,92,231,.14);border-color:rgba(108,92,231,.45);color:var(--txt)}
+.empty-hint{text-align:center;padding:30px;color:var(--txt3);font-size:.8rem}
+
+/* FORM MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(10px);z-index:200;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
+.overlay.open{display:flex}
+.modal{background:var(--surf);border:1px solid var(--bdr2);border-radius:var(--r3);width:100%;max-width:620px;margin:auto;animation:modalIn .25s ease}
+.modal-hd{padding:18px 22px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surf);border-radius:var(--r3) var(--r3) 0 0}
+.modal-hd h3{font-size:1rem;font-weight:800;font-family:var(--display)}
+.modal-bd{padding:20px 22px;max-height:75vh;overflow-y:auto}
+.x-btn{background:transparent;border:1.5px solid var(--bdr2);color:var(--txt2);width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:.8rem;display:flex;align-items:center;justify-content:center}
+.x-btn:hover{border-color:var(--red);color:var(--red)}
+.fieldset-title{font-size:.62rem;letter-spacing:2px;text-transform:uppercase;color:var(--accent);font-weight:700;margin:18px 0 8px;padding-top:10px;border-top:1px solid var(--bdr)}
+.fieldset-title:first-child{border-top:none;margin-top:0;padding-top:0}
+
+/* LOGIN */
+.login-wrap{min-height:calc(100vh - 60px);display:flex;align-items:center;justify-content:center;padding:20px}
+.login-card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r2);padding:30px;width:100%;max-width:380px;text-align:center}
+.login-card h2{font-family:var(--display);font-weight:800;font-size:1.3rem;margin-bottom:6px}
+.login-card p{color:var(--txt2);font-size:.8rem;margin-bottom:20px}
+.err-msg{color:var(--red);font-size:.74rem;margin-top:8px}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--surf2);border:1px solid var(--bdr2);border-radius:var(--r);padding:11px 15px;font-size:.78rem;z-index:9999;animation:modalIn .3s ease;max-width:280px}
+.toast.success{border-color:rgba(0,184,148,.45)}
+.toast.error{border-color:rgba(232,67,147,.45)}
+
+/* STATS GRID */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px}
+.stat-box{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r2);padding:16px;text-align:center}
+.stat-box .val{font-size:1.6rem;font-weight:800;color:var(--accent);font-family:var(--display)}
+.stat-box .lbl{font-size:.66rem;color:var(--txt3);margin-top:4px;letter-spacing:.5px;text-transform:uppercase}
+
+@media(max-width:800px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{display:flex;overflow-x:auto;padding:10px;gap:4px;border-right:none;border-bottom:1px solid var(--bdr)}
+  .side-section{display:flex;gap:4px}
+  .side-title{display:none}
+  .content{padding:18px}
+  .fg-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <a href="home.html" class="logo">
+    <div class="logo-img"><img src="CWS_Logo.png" alt="CWS" onerror="this.parentElement.textContent='⚡'"></div>
+    CapWorks <em>Studio</em> — Admin
+  </a>
+  <div id="hdrR" style="display:flex;align-items:center;gap:8px">
+    <a href="home.html" class="btn btn-ghost btn-sm">← Site</a>
+  </div>
+</header>
+
+<!-- LOGIN WALL -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-card">
+    <div style="font-size:2rem;margin-bottom:10px">🔐</div>
+    <h2>Accès administrateur</h2>
+    <p>Connectez-vous avec un compte ayant le rôle <b>owner</b>.</p>
+    <div class="fg"><label>Pseudo</label><input type="text" class="inp" id="lUser" placeholder="Votre pseudo..."></div>
+    <div class="fg"><label>Mot de passe</label><input type="password" class="inp" id="lPass" placeholder="••••••••" onkeypress="if(event.key==='Enter')doAdminLogin()"></div>
+    <div class="err-msg" id="lErr"></div>
+    <button class="btn btn-primary btn-full" style="margin-top:6px" onclick="doAdminLogin()">Se connecter →</button>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="layout" id="adminPanel" style="display:none">
+  <aside class="sidebar">
+    <div class="side-section">
+      <div class="side-title">Projets</div>
+      <div class="side-link active" data-view="projects" onclick="switchView('projects')">🗂 Projets</div>
+    </div>
+    <div class="side-section">
+      <div class="side-title">Contenu</div>
+      <div class="side-link" data-view="campaigns" onclick="switchView('campaigns')">💛 Campagnes</div>
+      <div class="side-link" data-view="team" onclick="switchView('team')">👥 Équipe</div>
+    </div>
+    <div class="side-section">
+      <div class="side-title">Communauté</div>
+      <div class="side-link" data-view="users" onclick="switchView('users')">🙂 Utilisateurs</div>
+      <div class="side-link" data-view="tickets" onclick="switchView('tickets')">🎟 Support</div>
+      <div class="side-link" data-view="messages" onclick="switchView('messages')">📬 Messages</div>
+    </div>
+    <div class="side-section">
+      <div class="side-title">Système</div>
+      <div class="side-link" data-view="settings" onclick="switchView('settings')">⚙ Paramètres</div>
+      <div class="side-link" data-view="stats" onclick="switchView('stats')">📊 Statistiques</div>
+    </div>
+  </aside>
+  <main class="content" id="content"></main>
+</div>
+
+<!-- PROJECT FORM MODAL -->
+<div class="overlay" id="projFormOv" onclick="ovClick(event,'projFormOv')">
+  <div class="modal">
+    <div class="modal-hd"><h3 id="projFormTitle">Nouveau projet</h3><button class="x-btn" onclick="closeOv('projFormOv')">✕</button></div>
+    <div class="modal-bd" id="projFormBody"></div>
+  </div>
+</div>
+
+<!-- GENERIC FORM MODAL (campaigns / team) -->
+<div class="overlay" id="genFormOv" onclick="ovClick(event,'genFormOv')">
+  <div class="modal">
+    <div class="modal-hd"><h3 id="genFormTitle">Élément</h3><button class="x-btn" onclick="closeOv('genFormOv')">✕</button></div>
+    <div class="modal-bd" id="genFormBody"></div>
+  </div>
+</div>
+
+<script>
+const API='https://capworks-worker.capkychannel.workers.dev';
+const $=id=>document.getElementById(id);
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function closeOv(id){$(id).classList.remove('open');}
+function ovClick(e,id){if(e.target===$(id))closeOv(id);}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.overlay.open').forEach(el=>el.classList.remove('open'));});
+function toast(msg,type='success'){const t=document.createElement('div');t.className='toast '+type;t.textContent=(type==='success'?'✓ ':'✕ ')+msg;document.body.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='all .3s';setTimeout(()=>t.remove(),300);},3200);}
+
+const CATS=['sites','games','software','animations','bots','ai','assets','other'];
+const CAT_META={
+  sites:{label:'Sites Web',icon:'🌐'}, games:{label:'Jeux Vidéos',icon:'🎮'},
+  software:{label:'Logiciels',icon:'⚙️'}, animations:{label:'Animations',icon:'🎬'},
+  bots:{label:'Bots Discord',icon:'🤖'}, ai:{label:'IA',icon:'🧠'},
+  assets:{label:'Assets',icon:'📦'}, other:{label:'Autres',icon:'◈'}
+};
+
+let db=null, FB=null;
+let curUser=JSON.parse(localStorage.getItem('cw_session')||'null');
+let projects={}; CATS.forEach(c=>projects[c]=[]);
+let campaigns=[], team=[], activeCat='sites', activeView='projects';
+let settings={ enableLikes:true, enableViews:true, enableDownloadCount:true, showHighlights:true };
+
+/* ══ API helpers ══ */
+async function apiGet(path){try{const r=await fetch(API+path,{headers:curUser?.token?{Authorization:`Bearer ${curUser.token}`}:{}});if(!r.ok)return{error:`HTTP ${r.status}`};return r.json();}catch(e){return{error:'Réseau'};}}
+async function apiPost(path,body,method='POST'){try{const r=await fetch(API+path,{method,headers:{'Content-Type':'application/json',...(curUser?.token&&{Authorization:`Bearer ${curUser.token}`})},body:JSON.stringify(body)});try{return await r.json();}catch{return{ok:r.ok,error:r.ok?undefined:`HTTP ${r.status}`};}}catch(e){return{error:'Réseau'};}}
+
+/* ══ AUTH / LOGIN WALL ══ */
+async function doAdminLogin(){
+  const u=$('lUser').value.trim(), p=$('lPass').value;
+  const err=$('lErr');
+  if(!u||!p){err.textContent='✕ Remplissez tous les champs';return;}
+  const data=await apiPost('/api/auth/login',{username:u,password:p});
+  if(data.error){err.textContent='✕ '+data.error;return;}
+  if(data.role!=='owner'){err.textContent='✕ Accès réservé au rôle owner';return;}
+  curUser={username:data.username,role:data.role,emoji:data.emoji,token:data.token,email:data.email||''};
+  localStorage.setItem('cw_session',JSON.stringify(curUser));
+  initAdmin();
+}
+function logout(){ curUser=null; localStorage.removeItem('cw_session'); location.reload(); }
+
+async function initAdmin(){
+  if(!curUser||!curUser.token){ showLogin(); return; }
+  // verify role still owner
+  const me=await apiGet('/api/user/me');
+  if(me?.error || me.role!=='owner'){ showLogin('Session invalide ou rôle insuffisant.'); return; }
+  curUser={...curUser,...me};
+  $('loginWrap').style.display='none';
+  $('adminPanel').style.display='grid';
+  $('hdrR').innerHTML=`<div style="font-size:.78rem;color:var(--txt2);font-weight:600">${curUser.emoji||'👑'} ${esc(curUser.username)}</div><a href="home.html" class="btn btn-ghost btn-sm">← Site</a><button class="btn btn-danger btn-sm" onclick="logout()">🚪 Déco</button>`;
+  await waitForFirebase();
+  db=window.__db; FB=window.__firebase;
+  await Promise.all([loadAllProjects(),loadSettings(),loadCampaigns(),loadTeam()]);
+  switchView('projects');
+}
+function showLogin(msg){
+  $('loginWrap').style.display='flex'; $('adminPanel').style.display='none';
+  if(msg)$('lErr').textContent='✕ '+msg;
+}
+function waitForFirebase(){return new Promise(resolve=>{if(window.__firebaseReady){resolve();return;}document.addEventListener('firebase-ready',resolve,{once:true});setTimeout(resolve,6000);});}
+
+/* ══ FIRESTORE DATA ══ */
+async function loadAllProjects(){
+  for(const cat of CATS){
+    const snap=await FB.getDocs(FB.collection(db,`projects_${cat}`));
+    projects[cat]=[]; snap.forEach(d=>projects[cat].push({id:d.id,...d.data()}));
+    projects[cat].sort((a,b)=>(a.order||999)-(b.order||999));
+  }
+}
+async function loadSettings(){
+  try{ const snap=await FB.getDoc(FB.doc(db,'config','projects_settings')); if(snap.exists())settings={...settings,...snap.data()}; }catch(e){}
+}
+async function loadCampaigns(){ const d=await apiGet('/api/admin/campaigns'); campaigns=Array.isArray(d)?d:[]; }
+async function loadTeam(){ const d=await apiGet('/api/team'); team=Array.isArray(d)?d:[]; }
+
+/* ══ VIEW ROUTER ══ */
+function switchView(view){
+  activeView=view;
+  document.querySelectorAll('.side-link').forEach(l=>l.classList.toggle('active',l.dataset.view===view));
+  const c=$('content');
+  if(view==='projects')renderProjectsView(c);
+  else if(view==='campaigns')renderCampaignsView(c);
+  else if(view==='team')renderTeamView(c);
+  else if(view==='users')renderUsersView(c);
+  else if(view==='tickets')renderTicketsView(c);
+  else if(view==='messages')renderMessagesView(c);
+  else if(view==='settings')renderSettingsView(c);
+  else if(view==='stats')renderStatsView(c);
+}
+
+/* ══════════════ PROJECTS ══════════════ */
+function renderProjectsView(c){
+  c.innerHTML=`<h2>🗂 Projets</h2><div class="sub">Gérez les projets affichés sur la page Projets.</div>
+  <div class="cat-tabs" id="projCatTabs">${CATS.map(cat=>`<div class="cat-tab${cat===activeCat?' active':''}" onclick="setProjCat('${cat}')">${CAT_META[cat].icon} ${CAT_META[cat].label} <span style="font-family:var(--mono);font-size:.6rem;opacity:.6">(${projects[cat].length})</span></div>`).join('')}</div>
+  <div style="margin-bottom:14px"><button class="btn btn-primary btn-sm" onclick="openProjForm('${activeCat}')">+ Ajouter un projet</button></div>
+  <div id="projList"></div>`;
+  renderProjList();
+}
+function setProjCat(cat){ activeCat=cat; renderProjectsView($('content')); }
+function renderProjList(){
+  const list=$('projList'); const items=projects[activeCat]||[];
+  if(!items.length){ list.innerHTML='<div class="empty-hint">Aucun projet dans cette catégorie.</div>'; return; }
+  list.innerHTML=items.map((p,i)=>`
+    <div class="item-row">
+      <div class="item-thumb">${p.imageUrl?`<img src="${esc(p.imageUrl)}">`:CAT_META[activeCat].icon}</div>
+      <div class="item-main">
+        <div class="item-title">${esc(p.title||'Sans titre')}${p.hidden?'<span class="item-badge hidden">Masqué</span>':''}${p.highlightOn&&p.highlight?'<span class="item-badge hl">🔥 Highlight</span>':''}</div>
+        <div class="item-meta">❤ ${p.likes||0} · 👁 ${p.views||0} · ↓ ${p.downloads||0} · ordre ${p.order||999}</div>
+      </div>
+      <div class="item-actions">
+        <button class="btn btn-ghost btn-sm" onclick="toggleHidden('${activeCat}','${p.id}')">${p.hidden?'👁 Afficher':'🙈 Masquer'}</button>
+        <button class="btn btn-ghost btn-sm" onclick="openProjForm('${activeCat}','${p.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteProj('${activeCat}','${p.id}')">🗑</button>
+      </div>
+    </div>`).join('');
+}
+async function toggleHidden(cat,id){
+  const p=projects[cat].find(x=>x.id===id); if(!p)return;
+  p.hidden=!p.hidden;
+  await FB.updateDoc(FB.doc(db,`projects_${cat}`,id),{hidden:p.hidden});
+  toast(p.hidden?'Projet masqué':'Projet affiché'); renderProjList();
+}
+async function deleteProj(cat,id){
+  if(!confirm('Supprimer définitivement ce projet ?'))return;
+  await FB.deleteDoc(FB.doc(db,`projects_${cat}`,id));
+  projects[cat]=projects[cat].filter(p=>p.id!==id);
+  toast('Projet supprimé'); renderProjList();
+}
+
+/* ── Project form fields per category ── */
+const CAT_FIELDS={
+  sites:[ ['url','URL du site','text'], ['status','Statut','select',['live:🟢 En ligne','wip:🟡 En développement']], ['repoUrl','Lien du code (repo)','text'] ],
+  games:[ ['downloadUrl','Lien de téléchargement','text'], ['playUrl','Lien pour jouer (web)','text'], ['platforms','Plateformes (ex: Windows, Web)','text'], ['repoUrl','Lien du code (repo)','text'] ],
+  software:[ ['downloadUrl','Lien de téléchargement','text'], ['url','Site / page du logiciel','text'], ['version','Version','text'], ['os','OS supportés','text'] ],
+  animations:[ ['downloadUrl','Lien de téléchargement','text'], ['software','Logiciel utilisé','text'], ['resolution','Résolution','text'] ],
+  bots:[ ['inviteUrl','Lien d\\'invitation Discord','text'], ['url','Site / dashboard','text'], ['prefix','Préfixe des commandes','text'], ['servers','Nombre de serveurs','text'] ],
+  ai:[ ['model','Modèle utilisé','text'], ['demoUrl','Lien de démo','text'], ['downloadUrl','Lien de téléchargement','text'], ['features','Fonctionnalités (résumé)','textarea'] ],
+  assets:[ ['downloadUrl','Lien de téléchargement (ZIP)','text'], ['size','Taille de l\\'archive (ex: 24 Mo)','text'], ['license','Licence','text'], ['folderTree','Arborescence des fichiers','tree'] ],
+  other:[ ['url','Lien principal','text'], ['downloadUrl','Lien de téléchargement','text'] ]
+};
+const COMMON_FIELDS=[
+  ['title','Titre','text'], ['desc','Description courte','textarea'], ['longDesc','Description complète','textarea'],
+  ['tags','Tags (séparés par des virgules)','text'], ['tech','Technologies (séparées par des virgules)','text'],
+  ['imageUrl','Image (URL)','text'], ['videoUrl','Vidéo YouTube (URL)','text'], ['duration','Durée (ex: 2:45)','text'],
+  ['order','Ordre d\\'affichage','number']
+];
+
+function fieldHtml(id,label,type,opts){
+  const safeId='pf_'+id;
+  if(type==='select'){ return `<div class="fg"><label>${label}</label><select class="inp" id="${safeId}">${opts.map(o=>{const[v,l]=o.split(':');return `<option value="${v}">${l}</option>`;}).join('')}</select></div>`; }
+  if(type==='textarea')return `<div class="fg"><label>${label}</label><textarea class="inp" id="${safeId}"></textarea></div>`;
+  if(type==='tree')return `<div class="fg"><label>${label}</label><textarea class="inp" id="${safeId}" placeholder="[Documents]: guide.pdf, notes.txt&#10;readme.md"></textarea><div style="font-size:.65rem;color:var(--txt3);margin-top:4px">Format : <code>[Nom du dossier]: fichier1, fichier2</code> — une ligne par dossier. Les lignes sans crochets sont des fichiers à la racine.</div></div>`;
+  if(type==='number')return `<div class="fg"><label>${label}</label><input type="number" class="inp" id="${safeId}"></div>`;
+  return `<div class="fg"><label>${label}</label><input type="text" class="inp" id="${safeId}"></div>`;
+}
+
+/* Convert folder-tree text <-> {folders:[{name,files:[{name}]}], files:[{name}]} */
+function textToTree(text){
+  const folders=[], files=[];
+  (text||'').split('\n').map(l=>l.trim()).filter(Boolean).forEach(line=>{
+    const m=line.match(/^\[(.+?)\]\s*:\s*(.*)$/);
+    if(m){ folders.push({ name:m[1].trim(), files:(m[2]||'').split(',').map(f=>f.trim()).filter(Boolean).map(name=>({name})) }); }
+    else { line.split(',').map(f=>f.trim()).filter(Boolean).forEach(name=>files.push({name})); }
+  });
+  return {folders,files};
+}
+function treeToText(folders,files){
+  let lines=(folders||[]).map(f=>`[${f.name}]: ${(f.files||[]).map(x=>x.name||x).join(', ')}`);
+  if((files||[]).length) lines.push((files||[]).map(x=>x.name||x).join(', '));
+  return lines.join('\n');
+}
+
+function openProjForm(cat,id){
+  const proj=id?projects[cat].find(p=>p.id===id):{};
+  $('projFormTitle').textContent=id?`✏️ Modifier — ${CAT_META[cat].label}`:`+ Nouveau — ${CAT_META[cat].label}`;
+  let html=`<input type="hidden" id="pf_cat" value="${cat}"><input type="hidden" id="pf_id" value="${id||''}">`;
+  html+=`<div class="fieldset-title">Informations générales</div>`;
+  COMMON_FIELDS.forEach(([fid,label,type])=>html+=fieldHtml(fid,label,type));
+  html+=`<div class="fieldset-title">Spécifique — ${CAT_META[cat].label}</div>`;
+  (CAT_FIELDS[cat]||[]).forEach(([fid,label,type,opts])=>html+=fieldHtml(fid,label,type,opts));
+  html+=`<div class="fieldset-title">Message attractif (highlight)</div>
+    <div class="tog-row"><label>🔥 Afficher le message attractif sur ce projet</label><button class="tog-btn" id="pf_highlightOn_tog" onclick="toggleTog(this)"></button></div>
+    <div class="fg"><label>Texte du message</label><textarea class="inp" id="pf_highlight" placeholder="Ex : Offre limitée, démo disponible, projet en vedette..."></textarea></div>
+    <div style="font-size:.65rem;color:var(--txt3);margin-top:-6px;margin-bottom:11px">Le réglage global « Afficher les messages attractifs » (onglet Paramètres) doit aussi être activé pour qu'il apparaisse sur le site.</div>
+    <div class="fieldset-title">Visibilité</div>
+    <div class="tog-row"><label>🙈 Masquer ce projet sur le site</label><button class="tog-btn" id="pf_hidden_tog" onclick="toggleTog(this)"></button></div>
+    <div class="fg-row">
+      <div class="fg"><label>Likes</label><input type="number" class="inp" id="pf_likes"></div>
+      <div class="fg"><label>Vues</label><input type="number" class="inp" id="pf_views"></div>
+    </div>
+    <div class="fg"><label>Téléchargements</label><input type="number" class="inp" id="pf_downloads"></div>
+    <button class="btn btn-primary btn-full" onclick="saveProj()" style="margin-top:6px">💾 Enregistrer</button>`;
+  $('projFormBody').innerHTML=html;
+
+  // populate values
+  const all=[...COMMON_FIELDS,...(CAT_FIELDS[cat]||[])];
+  all.forEach(([fid,,type])=>{
+    const el=$('pf_'+fid); if(!el)return;
+    if(type==='tree'){ el.value=treeToText(proj.folders,proj.files); return; }
+    el.value=proj[fid]??'';
+  });
+  setTog('pf_highlightOn_tog',!!proj.highlightOn);
+  setTog('pf_hidden_tog',!!proj.hidden);
+  $('pf_likes').value=proj.likes||0; $('pf_views').value=proj.views||0; $('pf_downloads').value=proj.downloads||0;
+  $('projFormOv').classList.add('open');
+}
+function setTog(id,on){ const el=$(id); if(el)el.classList.toggle('on',on); }
+function toggleTog(btn){ btn.classList.toggle('on'); }
+
+async function saveProj(){
+  const cat=$('pf_cat').value, id=$('pf_id').value;
+  const all=[...COMMON_FIELDS,...(CAT_FIELDS[cat]||[])];
+  const data={};
+  all.forEach(([fid,,type])=>{
+    const el=$('pf_'+fid); if(!el)return;
+    if(type==='number'){ data[fid]=el.value?Number(el.value):0; return; }
+    if(type==='tree'){ const tree=textToTree(el.value); data.folders=tree.folders; data.files=tree.files; return; }
+    data[fid]=el.value.trim();
+  });
+  data.highlight=$('pf_highlight').value.trim();
+  data.highlightOn=$('pf_highlightOn_tog').classList.contains('on');
+  data.hidden=$('pf_hidden_tog').classList.contains('on');
+  data.likes=Number($('pf_likes').value)||0;
+  data.views=Number($('pf_views').value)||0;
+  data.downloads=Number($('pf_downloads').value)||0;
+  data.order=Number(data.order)||999;
+
+  try{
+    if(id){ await FB.updateDoc(FB.doc(db,`projects_${cat}`,id),data); const idx=projects[cat].findIndex(p=>p.id===id); projects[cat][idx]={...projects[cat][idx],...data,id}; }
+    else { const ref=await FB.addDoc(FB.collection(db,`projects_${cat}`),data); projects[cat].push({id:ref.id,...data}); }
+    projects[cat].sort((a,b)=>(a.order||999)-(b.order||999));
+    closeOv('projFormOv'); toast('Projet enregistré !'); renderProjList();
+  }catch(e){ toast('Erreur : '+e.message,'error'); }
+}
+
+/* ══════════════ CAMPAGNES ══════════════ */
+function renderCampaignsView(c){
+  c.innerHTML=`<h2>💛 Campagnes de don</h2><div class="sub">Gérez les campagnes affichées sur la page Campagnes.</div>
+  <div style="margin-bottom:14px"><button class="btn btn-primary btn-sm" onclick="openCampForm()">+ Nouvelle campagne</button></div>
+  <div id="campList"></div>`;
+  renderCampList();
+}
+function renderCampList(){
+  const list=$('campList');
+  if(!campaigns.length){ list.innerHTML='<div class="empty-hint">Aucune campagne pour le moment.</div>'; return; }
+  list.innerHTML=campaigns.map(camp=>`
+    <div class="item-row">
+      <div class="item-thumb">${camp.imageUrl?`<img src="${esc(camp.imageUrl)}">`:'💛'}</div>
+      <div class="item-main">
+        <div class="item-title">${esc(camp.title||'Sans titre')}${camp.featured?'<span class="item-badge hl">★ En vedette</span>':''}${camp.active===false?'<span class="item-badge hidden">Inactive</span>':''}</div>
+        <div class="item-meta">${camp.raised||0}€ / ${camp.goal||0}€</div>
+      </div>
+      <div class="item-actions">
+        <button class="btn btn-ghost btn-sm" onclick="openCampForm('${camp.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteCamp('${camp.id}')">🗑</button>
+      </div>
+    </div>`).join('');
+}
+function openCampForm(id){
+  const camp=id?campaigns.find(c=>c.id===id):{};
+  $('genFormTitle').textContent=id?'✏️ Modifier la campagne':'+ Nouvelle campagne';
+  $('genFormBody').innerHTML=`
+    <input type="hidden" id="cf_id" value="${camp?.id||''}">
+    <div class="fg"><label>Titre</label><input type="text" class="inp" id="cf_title" value="${esc(camp?.title||'')}"></div>
+    <div class="fg"><label>Description</label><textarea class="inp" id="cf_desc">${esc(camp?.desc||'')}</textarea></div>
+    <div class="fg"><label>Image (URL)</label><input type="text" class="inp" id="cf_imageUrl" value="${esc(camp?.imageUrl||'')}"></div>
+    <div class="fg-row">
+      <div class="fg"><label>Objectif (€)</label><input type="number" class="inp" id="cf_goal" value="${camp?.goal||0}"></div>
+      <div class="fg"><label>Montant récolté (€)</label><input type="number" class="inp" id="cf_raised" value="${camp?.raised||0}"></div>
+    </div>
+    <div class="fg"><label>Lien PayPal</label><input type="text" class="inp" id="cf_paypalUrl" value="${esc(camp?.paypalUrl||'')}"></div>
+    <div class="fg"><label>Lien Stripe</label><input type="text" class="inp" id="cf_stripeUrl" value="${esc(camp?.stripeUrl||'')}"></div>
+    <div class="tog-row"><label>★ Mettre en vedette</label><button class="tog-btn ${camp?.featured?'on':''}" id="cf_featured_tog" onclick="toggleTog(this)"></button></div>
+    <div class="tog-row"><label>✅ Campagne active</label><button class="tog-btn ${camp?.active!==false?'on':''}" id="cf_active_tog" onclick="toggleTog(this)"></button></div>
+    <button class="btn btn-primary btn-full" onclick="saveCamp()" style="margin-top:6px">💾 Enregistrer</button>`;
+  $('genFormOv').classList.add('open');
+}
+async function saveCamp(){
+  const id=$('cf_id').value||('camp_'+Date.now().toString(36));
+  const data={ id, title:$('cf_title').value.trim(), desc:$('cf_desc').value.trim(), imageUrl:$('cf_imageUrl').value.trim(),
+    goal:Number($('cf_goal').value)||0, raised:Number($('cf_raised').value)||0,
+    paypalUrl:$('cf_paypalUrl').value.trim(), stripeUrl:$('cf_stripeUrl').value.trim(),
+    featured:$('cf_featured_tog').classList.contains('on'), active:$('cf_active_tog').classList.contains('on'),
+    createdAt:campaigns.find(c=>c.id===id)?.createdAt||new Date().toISOString() };
+  if(!data.title){ toast('Le titre est requis','error'); return; }
+  const res=await apiPost('/api/admin/campaigns',data,'PUT');
+  if(res.error){ toast('Erreur : '+res.error,'error'); return; }
+  const idx=campaigns.findIndex(c=>c.id===id);
+  if(idx>=0)campaigns[idx]=data; else campaigns.push(data);
+  closeOv('genFormOv'); toast('Campagne enregistrée !'); renderCampList();
+}
+async function deleteCamp(id){
+  if(!confirm('Supprimer cette campagne ?'))return;
+  const res=await apiPost('/api/admin/campaigns',{id},'DELETE');
+  if(res.error){ toast('Erreur : '+res.error,'error'); return; }
+  campaigns=campaigns.filter(c=>c.id!==id); toast('Campagne supprimée'); renderCampList();
+}
+
+/* ══════════════ ÉQUIPE ══════════════ */
+const ROLE_LBL={owner:'Fondateur',dev:'Développeur',mod:'Modérateur',support:'Support'};
+function renderTeamView(c){
+  c.innerHTML=`<h2>👥 Équipe</h2><div class="sub">Membres affichés sur la page d'accueil.</div>
+  <div style="margin-bottom:14px"><button class="btn btn-primary btn-sm" onclick="openTeamForm()">+ Ajouter un membre</button></div>
+  <div id="teamList"></div>`;
+  renderTeamList();
+}
+function renderTeamList(){
+  const list=$('teamList');
+  if(!team.length){ list.innerHTML='<div class="empty-hint">Aucun membre.</div>'; return; }
+  list.innerHTML=team.map(m=>`
+    <div class="item-row">
+      <div class="item-thumb">${m.avatar||'👤'}</div>
+      <div class="item-main">
+        <div class="item-title">${esc(m.name||m.id)}${m.online?'<span class="item-badge hl">En ligne</span>':''}</div>
+        <div class="item-meta">${ROLE_LBL[m.role]||m.role||'—'} · ${(m.tags||[]).join(', ')}</div>
+      </div>
+      <div class="item-actions">
+        <button class="btn btn-ghost btn-sm" onclick="openTeamForm('${m.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteTeam('${m.id}')">🗑</button>
+      </div>
+    </div>`).join('');
+}
+function openTeamForm(id){
+  const m=id?team.find(t=>t.id===id):{};
+  $('genFormTitle').textContent=id?'✏️ Modifier le membre':'+ Nouveau membre';
+  $('genFormBody').innerHTML=`
+    <input type="hidden" id="tf_id" value="${m?.id||''}">
+    <div class="fg"><label>Nom affiché</label><input type="text" class="inp" id="tf_name" value="${esc(m?.name||'')}"></div>
+    <div class="fg-row">
+      <div class="fg"><label>Avatar (emoji)</label><input type="text" class="inp" id="tf_avatar" maxlength="2" value="${esc(m?.avatar||'👤')}"></div>
+      <div class="fg"><label>Rôle</label><select class="inp" id="tf_role">
+        <option value="owner"${m?.role==='owner'?' selected':''}>Fondateur</option>
+        <option value="dev"${m?.role==='dev'?' selected':''}>Développeur</option>
+        <option value="mod"${m?.role==='mod'?' selected':''}>Modérateur</option>
+        <option value="support"${m?.role==='support'?' selected':''}>Support</option>
+      </select></div>
+    </div>
+    <div class="fg"><label>Tags (séparés par des virgules)</label><input type="text" class="inp" id="tf_tags" value="${esc((m?.tags||[]).join(', '))}"></div>
+    <div class="tog-row"><label>🟢 Afficher comme en ligne</label><button class="tog-btn ${m?.online?'on':''}" id="tf_online_tog" onclick="toggleTog(this)"></button></div>
+    <button class="btn btn-primary btn-full" onclick="saveTeamMember()" style="margin-top:6px">💾 Enregistrer</button>`;
+  $('genFormOv').classList.add('open');
+}
+async function saveTeamMember(){
+  const id=$('tf_id').value||('member_'+Date.now().toString(36));
+  const data={ id, name:$('tf_name').value.trim(), avatar:$('tf_avatar').value.trim()||'👤', role:$('tf_role').value,
+    tags:$('tf_tags').value.split(',').map(t=>t.trim()).filter(Boolean), online:$('tf_online_tog').classList.contains('on') };
+  if(!data.name){ toast('Le nom est requis','error'); return; }
+  const res=await apiPost('/api/admin/team',data,'PUT');
+  if(res.error){ toast('Erreur : '+res.error,'error'); return; }
+  const idx=team.findIndex(t=>t.id===id);
+  if(idx>=0)team[idx]=data; else team.push(data);
+  closeOv('genFormOv'); toast('Membre enregistré !'); renderTeamList();
+}
+async function deleteTeam(id){
+  if(!confirm('Supprimer ce membre ?'))return;
+  const res=await apiPost('/api/admin/team',{id},'DELETE');
+  if(res.error){ toast('Erreur : '+res.error,'error'); return; }
+  team=team.filter(t=>t.id!==id); toast('Membre supprimé'); renderTeamList();
+}
+
+/* ══════════════ UTILISATEURS ══════════════ */
+async function renderUsersView(c){
+  c.innerHTML=`<h2>🙂 Utilisateurs</h2><div class="sub">Comptes inscrits sur le site.</div><div id="usersList">Chargement...</div>`;
+  const users=await apiGet('/api/admin/users');
+  if(users.error){ $('usersList').innerHTML=`<div class="empty-hint">Erreur : ${esc(users.error)}</div>`; return; }
+  if(!users.length){ $('usersList').innerHTML='<div class="empty-hint">Aucun utilisateur.</div>'; return; }
+  $('usersList').innerHTML=users.map(u=>`
+    <div class="item-row">
+      <div class="item-thumb">${u.emoji||'👤'}</div>
+      <div class="item-main">
+        <div class="item-title">${esc(u.username)}${u.online?'<span class="item-badge hl">En ligne</span>':''}</div>
+        <div class="item-meta">${esc(u.email||'—')} · ${u.role||'user'}</div>
+      </div>
+      <div class="item-actions">
+        <select class="inp" style="width:auto;padding:5px 8px;font-size:.72rem" onchange="changeUserRole('${esc(u.username)}',this.value)">
+          <option value="user"${u.role==='user'?' selected':''}>user</option>
+          <option value="mod"${u.role==='mod'?' selected':''}>mod</option>
+          <option value="owner"${u.role==='owner'?' selected':''}>owner</option>
+        </select>
+        <button class="btn btn-danger btn-sm" onclick="deleteUser('${esc(u.username)}')">🗑</button>
+      </div>
+    </div>`).join('');
+}
+async function changeUserRole(username,role){
+  const res=await apiPost('/api/admin/users/role',{username,role});
+  if(res.error){ toast('Erreur : '+res.error,'error'); return; }
+  toast(`Rôle de ${username} → ${role}`);
+}
+async function deleteUser(username){
+  if(!confirm(`Supprimer le compte « ${username} » ?`))return;
+  const res=await apiPost('/api/admin/users',{username},'DELETE');
+  if(res.error){ toast('Erreur : '+res.error,'error'); return; }
+  toast('Utilisateur supprimé'); renderUsersView($('content'));
+}
+
+/* ══════════════ TICKETS SUPPORT ══════════════ */
+async function renderTicketsView(c){
+  c.innerHTML=`<h2>🎟 Tickets de support</h2><div class="sub">Salons de discussion utilisateurs.</div><div id="ticketsList">Chargement...</div>`;
+  const tickets=await apiGet('/api/admin/tickets');
+  if(tickets.error){ $('ticketsList').innerHTML=`<div class="empty-hint">Erreur : ${esc(tickets.error)}</div>`; return; }
+  if(!tickets.length){ $('ticketsList').innerHTML='<div class="empty-hint">Aucun ticket. Répondez aux utilisateurs depuis la section Support de l\\'accueil.</div>'; return; }
+  $('ticketsList').innerHTML=tickets.map(t=>{
+    const msgs=t.messages||[]; const last=msgs[msgs.length-1];
+    return `<div class="item-row">
+      <div class="item-thumb">🎟</div>
+      <div class="item-main">
+        <div class="item-title">${esc(t.username||t.id)}</div>
+        <div class="item-meta">${msgs.length} message${msgs.length!==1?'s':''}${last?' · dernier : '+esc(last.text.slice(0,60)):''}</div>
+      </div>
+      <div class="item-actions">
+        <a href="home.html#support" class="btn btn-ghost btn-sm">💬 Répondre</a>
+        <button class="btn btn-danger btn-sm" onclick="deleteTicket('${esc(t.username||t.id)}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+async function deleteTicket(username){
+  if(!confirm('Supprimer ce ticket ?'))return;
+  const res=await apiPost('/api/admin/tickets',{username},'DELETE');
+  if(res.error){ toast('Erreur : '+res.error,'error'); return; }
+  toast('Ticket supprimé'); renderTicketsView($('content'));
+}
+
+/* ══════════════ MESSAGES DE CONTACT ══════════════ */
+async function renderMessagesView(c){
+  c.innerHTML=`<h2>📬 Messages de contact</h2><div class="sub">Messages envoyés via le formulaire de contact.</div>
+  <div style="margin-bottom:14px"><button class="btn btn-danger btn-sm" onclick="deleteAllMessages()">🗑 Tout supprimer</button></div>
+  <div id="msgsList">Chargement...</div>`;
+  const msgs=await apiGet('/api/admin/messages');
+  if(msgs.error){ $('msgsList').innerHTML=`<div class="empty-hint">Erreur : ${esc(msgs.error)}</div>`; return; }
+  if(!msgs.length){ $('msgsList').innerHTML='<div class="empty-hint">Aucun message.</div>'; return; }
+  $('msgsList').innerHTML=msgs.map(m=>`
+    <div class="card" style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px">
+        <div><div style="font-weight:700;font-size:.86rem">${esc(m.name)} <span style="color:var(--txt3);font-weight:500">— ${esc(m.email)}</span></div>
+        <div style="font-size:.7rem;color:var(--txt3);margin-top:2px">${esc(m.subject)} · ${esc(m.time||'')}</div></div>
+        <button class="btn btn-danger btn-sm" onclick="deleteMessage('${esc(m.id)}')">🗑</button>
+      </div>
+      <div style="font-size:.8rem;color:var(--txt2);line-height:1.6;white-space:pre-wrap">${esc(m.message)}</div>
+    </div>`).join('');
+}
+async function deleteMessage(id){
+  const res=await apiPost('/api/admin/messages',{id},'DELETE');
+  if(res.error){ toast('Erreur : '+res.error,'error'); return; }
+  toast('Message supprimé'); renderMessagesView($('content'));
+}
+async function deleteAllMessages(){
+  if(!confirm('Supprimer TOUS les messages de contact ?'))return;
+  const res=await apiPost('/api/admin/messages',{all:true},'DELETE');
+  if(res.error){ toast('Erreur : '+res.error,'error'); return; }
+  toast('Messages supprimés'); renderMessagesView($('content'));
+}
+
+/* ══════════════ PARAMÈTRES ══════════════ */
+function renderSettingsView(c){
+  c.innerHTML=`<h2>⚙ Paramètres</h2><div class="sub">Réglages globaux du site.</div>
+  <div class="card">
+    <h3>🗂 Affichage des projets</h3>
+    <div class="tog-row"><label>❤ Activer les likes</label><button class="tog-btn ${settings.enableLikes!==false?'on':''}" id="st_enableLikes" onclick="toggleTog(this)"></button></div>
+    <div class="tog-row"><label>👁 Activer le comptage des vues</label><button class="tog-btn ${settings.enableViews!==false?'on':''}" id="st_enableViews" onclick="toggleTog(this)"></button></div>
+    <div class="tog-row"><label>↓ Activer le comptage des téléchargements</label><button class="tog-btn ${settings.enableDownloadCount!==false?'on':''}" id="st_enableDownloadCount" onclick="toggleTog(this)"></button></div>
+    <div class="tog-row"><label>🔥 Afficher les messages attractifs (highlights)</label><button class="tog-btn ${settings.showHighlights!==false?'on':''}" id="st_showHighlights" onclick="toggleTog(this)"></button></div>
+    <div style="font-size:.68rem;color:var(--txt3);margin:8px 0 14px">Ce réglage active/désactive globalement l'affichage des bannières 🔥 sur la page Projets. Chaque projet a aussi son propre interrupteur dans son formulaire d'édition.</div>
+    <button class="btn btn-primary" onclick="saveProjectSettings()">💾 Enregistrer</button>
+  </div>
+  <div class="card">
+    <h3>🔑 Mot de passe administrateur</h3>
+    <div class="fg"><label>Nouveau mot de passe</label><input type="password" class="inp" id="st_newPass" placeholder="Min. 8 caractères"></div>
+    <div id="st_passMsg" style="font-size:.74rem;margin-bottom:8px"></div>
+    <button class="btn btn-primary" onclick="changeAdminPassword()">Générer le nouveau hash</button>
+    <div style="font-size:.65rem;color:var(--txt3);margin-top:8px">Cette action génère un nouveau hash à copier manuellement dans la variable d'environnement <code>ADMIN_PASSWORD_HASH</code> du Worker (via <code>wrangler secret put</code>). Elle ne change rien automatiquement.</div>
+  </div>
+  <div class="card">
+    <h3>🔔 Webhook Discord</h3>
+    <p style="font-size:.78rem;color:var(--txt2);margin-bottom:12px">Envoie un message de test sur le webhook Discord configuré côté serveur.</p>
+    <button class="btn btn-ghost" onclick="testWebhook()">🧪 Envoyer un test</button>
+  </div>`;
+}
+async function saveProjectSettings(){
+  settings={
+    enableLikes:$('st_enableLikes').classList.contains('on'),
+    enableViews:$('st_enableViews').classList.contains('on'),
+    enableDownloadCount:$('st_enableDownloadCount').classList.contains('on'),
+    showHighlights:$('st_showHighlights').classList.contains('on')
+  };
+  try{ await FB.setDoc(FB.doc(db,'config','projects_settings'),settings); toast('Paramètres enregistrés !'); }
+  catch(e){ toast('Erreur : '+e.message,'error'); }
+}
+async function changeAdminPassword(){
+  const p=$('st_newPass').value; const msg=$('st_passMsg');
+  if(!p||p.length<8){ msg.style.color='var(--red)'; msg.textContent='✕ Min. 8 caractères'; return; }
+  const res=await apiPost('/api/admin/change-password',{newPassword:p});
+  if(res.error){ msg.style.color='var(--red)'; msg.textContent='✕ '+res.error; return; }
+  msg.style.color='var(--grn)'; msg.innerHTML=`✓ Hash généré : <code style="word-break:break-all;font-size:.65rem">${esc(res.newHash)}</code>`;
+}
+async function testWebhook(){
+  const res=await apiPost('/api/admin/webhook/test',{});
+  if(res.error){ toast('Erreur : '+res.error,'error'); return; }
+  toast('Webhook testé avec succès !');
+}
+
+/* ══════════════ STATISTIQUES ══════════════ */
+async function renderStatsView(c){
+  c.innerHTML=`<h2>📊 Statistiques</h2><div class="sub">Vue d'ensemble du site.</div><div id="statsBody">Chargement...</div>`;
+  const stats=await apiGet('/api/admin/stats');
+  let totalLikes=0,totalViews=0,totalDownloads=0,totalProj=0;
+  CATS.forEach(cat=>(projects[cat]||[]).forEach(p=>{ totalLikes+=p.likes||0; totalViews+=p.views||0; totalDownloads+=p.downloads||0; if(!p.hidden)totalProj++; }));
+  const body=$('statsBody');
+  if(stats.error){ body.innerHTML=`<div class="empty-hint">Erreur : ${esc(stats.error)}</div>`; }
+  else {
+    body.innerHTML=`<div class="stats-grid">
+      <div class="stat-box"><div class="val">${stats.users??'—'}</div><div class="lbl">Utilisateurs</div></div>
+      <div class="stat-box"><div class="val">${stats.online??'—'}</div><div class="lbl">En ligne</div></div>
+      <div class="stat-box"><div class="val">${stats.campaigns??campaigns.length}</div><div class="lbl">Campagnes</div></div>
+      <div class="stat-box"><div class="val">${totalProj}</div><div class="lbl">Projets publiés</div></div>
+    </div>`;
+  }
+  body.innerHTML+=`<div class="stats-grid">
+    <div class="stat-box"><div class="val">${totalLikes}</div><div class="lbl">Likes (projets)</div></div>
+    <div class="stat-box"><div class="val">${totalViews}</div><div class="lbl">Vues (projets)</div></div>
+    <div class="stat-box"><div class="val">${totalDownloads}</div><div class="lbl">Téléchargements</div></div>
+  </div>
+  <div class="card"><h3>🗂 Répartition par catégorie</h3>
+    ${CATS.map(cat=>{const n=(projects[cat]||[]).filter(p=>!p.hidden).length;return `<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:.82rem"><span>${CAT_META[cat].icon} ${CAT_META[cat].label}</span><span style="font-family:var(--mono);color:var(--accent);font-weight:700">${n}</span></div>`;}).join('')}
+  </div>`;
+}
+
+initAdmin();
+</script>
+</body>
+</html>
