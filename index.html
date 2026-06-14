@@ -241,7 +241,24 @@ transform:none !important;
 }
 
 </style>
-<script src="maintenance.js"></script>
+
+<script>
+(function(){
+  var req = new XMLHttpRequest();
+  req.open('GET', 'maintenance.js?t=' + Date.now(), false);
+  req.setRequestHeader('Cache-Control','no-cache, no-store, must-revalidate');
+  req.setRequestHeader('Pragma','no-cache');
+  req.setRequestHeader('Expires','0');
+  try { req.send(null); } catch(e){ return; }
+  if(req.status === 200){
+    var text = req.responseText;
+    var mFlag = text.match(/IS_MAINTENANCE\s*=\s*(true|false)/);
+    var mMsg  = text.match(/MAINTENANCE_MESSAGE\s*=\s*"([^"]*)"/);
+    window.__IS_MAINTENANCE = mFlag && mFlag[1] === 'true';
+    window.__MAINTENANCE_MESSAGE = mMsg ? mMsg[1] : '';
+  }
+})();
+</script>
 </head>
 
 <body>
@@ -277,10 +294,11 @@ const scene = document.getElementById("scene");
 const tiltHint = document.getElementById("tiltHint");
 
 // Lit IS_MAINTENANCE depuis maintenance.js (chargé juste avant)
-if(window.IS_MAINTENANCE){
-    btn.removeAttribute("href");
-    btn.textContent = "Bientôt disponible";
-    maintenance.style.display = "block";
+if(window.__IS_MAINTENANCE){
+btn.removeAttribute("href");
+btn.textContent = "Bientôt disponible";
+maintenance.style.display = "block";
+if(window.__MAINTENANCE_MESSAGE){ var el=maintenance.querySelector("p"); if(el) el.textContent=window.__MAINTENANCE_MESSAGE; }
 }
 
 /* ===== LIGNES (moins nombreuses sur petit écran pour la perf) ===== */
