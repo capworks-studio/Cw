@@ -377,7 +377,10 @@ const CAT_FIELDS={
 const COMMON_FIELDS=[
   ['title','Titre','text'], ['desc','Description courte','textarea'], ['longDesc','Description complète','textarea'],
   ['tags','Tags (séparés par des virgules)','text'], ['tech','Technologies / outils','text'],
-  ['imageUrl','Image (URL)','text'], ['videoUrl','Vidéo YouTube (URL)','text'],
+  ['imageUrl','Image principale (URL)','text'],
+  ['images','Images supplémentaires (une URL par ligne)','textarea'],
+  ['videoUrl','Vidéo YouTube principale (URL)','text'],
+  ['videos','Vidéos supplémentaires (une URL par ligne)','textarea'],
   ['order',"Ordre d'affichage",'number']
 ];
 
@@ -438,6 +441,8 @@ function openProjForm(cat,id){
   all.forEach(([fid,,type])=>{
     const el=$('pf_'+fid); if(!el)return;
     if(type==='tree'){ el.value=treeToText(proj.folders,proj.files); return; }
+    // arrays → one per line
+    if(fid==='images'||fid==='videos'){ el.value=Array.isArray(proj[fid])?proj[fid].join('\n'):(proj[fid]||''); return; }
     el.value=proj[fid]??'';
   });
   // Champs gérés séparément
@@ -458,6 +463,8 @@ async function saveProj(){
     const el=$('pf_'+fid); if(!el)return;
     if(type==='number'){ data[fid]=el.value?Number(el.value):0; return; }
     if(type==='tree'){ const tree=textToTree(el.value); data.folders=tree.folders; data.files=tree.files; return; }
+    // images / videos stored as arrays (one URL per line)
+    if(fid==='images'||fid==='videos'){ data[fid]=el.value.split('\n').map(s=>s.trim()).filter(Boolean); return; }
     data[fid]=el.value.trim();
   });
   data.highlight=$('pf_highlight').value.trim();
