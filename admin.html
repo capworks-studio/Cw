@@ -225,7 +225,7 @@ select.inp{cursor:pointer}
     </div>
     <div class="side-section">
       <div class="side-title">Communauté</div>
-      <div class="side-link" data-view="users" onclick="switchView('users')">🙂 Utilisateurs</div>
+      <div class="side-link" data-view="users" onclick="switchView('users')">👤 Utilisateurs</div>
       <div class="side-link" data-view="tickets" onclick="switchView('tickets')">🎫 Support</div>
       <div class="side-link" data-view="messages" onclick="switchView('messages')">📬 Messages</div>
     </div>
@@ -631,7 +631,7 @@ const USER_ROLE_BADGE={user:'',mod:'<span class="item-badge" style="background:r
 let _usersUnsub=null;
 async function renderUsersView(c){
   if(_usersUnsub){ _usersUnsub(); _usersUnsub=null; }
-  c.innerHTML=`<h2>🙂 Utilisateurs</h2><div class="sub">Comptes inscrits sur le site — le statut en ligne est mis à jour en temps réel.</div><div id="usersList">Chargement...</div>`;
+  c.innerHTML=`<h2>👤 Utilisateurs</h2><div class="sub">Comptes inscrits sur le site — le statut en ligne est mis à jour en temps réel.</div><div id="usersList">Chargement...</div>`;
   const users=await apiGet('/api/admin/users');
   if(users.error){ $('usersList').innerHTML=`<div class="empty-hint">Erreur : ${esc(users.error)}</div>`; return; }
   if(!users.length){ $('usersList').innerHTML='<div class="empty-hint">Aucun utilisateur.</div>'; return; }
