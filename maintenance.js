@@ -4,9 +4,6 @@
 
 window.IS_MAINTENANCE = false;
 
-window.MAINTENANCE_MESSAGE =
-"⚠️ Le site est actuellement indisponible.\nCe site est en cours de rénovation afin de vous offrir une meilleure expérience.";
-
 // ─── Ne pas modifier en dessous ───────────────────────────────────────────────
 
 (function () {
