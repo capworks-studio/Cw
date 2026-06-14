@@ -598,6 +598,11 @@ async function setOnline(v){ if(!curUser)return; await apiPost('/api/user/online
 document.addEventListener('visibilitychange',()=>{ if(curUser)setOnline(!document.hidden); });
 window.addEventListener('beforeunload',()=>{ if(curUser)setOnline(false); });
 
+/* ══ OTP STATE ══ */
+let _otpPending = null; // { username, email, password, emoji }
+let _emailChangePending = null; // { newEmail }
+
+/* ══ AUTH ══ */
 function openAuth(tab='login'){ $('authOv').classList.add('open'); switchAuth(tab); }
 function switchAuth(tab){
   document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active',['login','register'][i]===tab));
@@ -606,37 +611,137 @@ function switchAuth(tab){
   if(tab==='login'){
     f.innerHTML=`<div class="fg"><label>Pseudo</label><input type="text" class="inp" id="lUser" placeholder="Votre pseudo..."></div><div class="fg"><label>Mot de passe</label><input type="password" class="inp" id="lPass" placeholder="••••••••" onkeypress="if(event.key==='Enter')doLogin()"></div><div class="err-msg" id="lErr"></div><div style="margin-top:14px"><button class="btn btn-primary btn-full" onclick="doLogin()">Se connecter →</button></div>`;
   } else {
-    f.innerHTML=`<div class="fg"><label>Pseudo</label><input type="text" class="inp" id="rUser" placeholder="Choisissez un pseudo..."></div><div class="fg"><label>Email <span style="color:var(--red)">*</span></label><input type="email" class="inp" id="rEmail" placeholder="exemple@gmail.com"></div><div class="fg"><label>Mot de passe</label><input type="password" class="inp" id="rPass" placeholder="Min. 8 caractères..."></div><div class="fg"><label>Avatar (emoji)</label><input type="text" class="inp" id="rEmoji" placeholder="👤" maxlength="2"></div><div class="err-msg" id="rErr"></div><div style="margin-top:14px"><button class="btn btn-primary btn-full" id="rBtn" onclick="doRegister()">Créer mon compte →</button></div>`;
+    f.innerHTML=`
+      <div class="fg"><label>Pseudo</label><input type="text" class="inp" id="rUser" placeholder="Choisissez un pseudo..."></div>
+      <div class="fg"><label>Email <span style="color:var(--red)">*</span></label><input type="email" class="inp" id="rEmail" placeholder="exemple@gmail.com"></div>
+      <div class="fg"><label>Mot de passe</label><input type="password" class="inp" id="rPass" placeholder="Min. 8 caractères..."></div>
+      <div class="fg"><label>Avatar (emoji)</label><input type="text" class="inp" id="rEmoji" placeholder="👤" maxlength="2"></div>
+      <div class="err-msg" id="rErr"></div>
+      <div style="margin-top:14px"><button class="btn btn-primary btn-full" id="rBtn" onclick="doRegister()">Recevoir le code →</button></div>`;
   }
 }
+
 async function doLogin(){
   const u=$('lUser').value.trim(), p=$('lPass').value;
-  const err=$('lErr');
-  if(!u||!p){err.textContent='✕ Remplissez tous les champs';return;}
+  const errEl=$('lErr');
+  if(!u||!p){errEl.textContent='✕ Remplissez tous les champs';return;}
   const data=await apiPost('/api/auth/login',{username:u,password:p});
-  if(data.error){err.textContent='✕ '+data.error;return;}
+  if(data.error){errEl.textContent='✕ '+data.error;return;}
   curUser={username:data.username,role:data.role,emoji:data.emoji,token:data.token,email:data.email||''};
   localStorage.setItem('cw_session',JSON.stringify(curUser));
   await loadMe(); closeOv('authOv'); updateHdr(); renderSup(); toast(`Bienvenue, ${u} !`);
 }
+
 async function doRegister(){
   const u=$('rUser').value.trim(), email=$('rEmail').value.trim(), p=$('rPass').value;
-  let e=($('rEmoji').value.trim()||'👤');
-  const err=$('rErr'), btn=$('rBtn');
-  if(!u||!email||!p){err.textContent='✕ Remplissez tous les champs';return;}
-  if(p.length<8){err.textContent='✕ Mot de passe : min. 8 caractères';return;}
-  btn.disabled=true; btn.textContent='⟳ Création...';
-  const data=await apiPost('/api/auth/register',{username:u,email,password:p,emoji:e});
-  if(data.error){err.textContent='✕ '+data.error;btn.disabled=false;btn.textContent='Créer mon compte →';return;}
-  if(data.token){
+  const e=($('rEmoji').value.trim()||'👤');
+  const errEl=$('rErr'), btn=$('rBtn');
+  if(!u||!email||!p){errEl.textContent='✕ Remplissez tous les champs';return;}
+  if(p.length<8){errEl.textContent='✕ Mot de passe : min. 8 caractères';return;}
+  btn.disabled=true; btn.textContent='⟳ Envoi du code...';
+  const data=await apiPost('/api/auth/otp/request',{username:u,email,password:p,emoji:e});
+  if(data.error){errEl.textContent='✕ '+data.error;btn.disabled=false;btn.textContent='Recevoir le code →';return;}
+  _otpPending={username:u,email,password:p,emoji:e};
+  showOtpForm('register');
+  btn.disabled=false;
+}
+
+function showOtpForm(mode){
+  // mode: 'register' | 'email'
+  const title = mode==='register' ? 'Vérification email' : 'Confirmer le changement';
+  const info  = mode==='register'
+    ? `Un code à 6 chiffres a été envoyé à <b>${_otpPending?.email||_emailChangePending?.newEmail}</b>.`
+    : `Un code à 6 chiffres a été envoyé à <b>${_emailChangePending?.newEmail}</b>.`;
+  const target = mode==='register' ? 'authForm' : 'emailOtpZone';
+
+  const html=`
+    <div style="background:var(--surf2);border:1px solid var(--bdr);border-radius:var(--r);padding:14px 16px;margin-bottom:16px;font-size:.8rem;color:var(--txt2);line-height:1.6">
+      📧 ${info}<br>
+      <span style="font-size:.72rem;color:var(--txt3)">Vérifiez vos spams si vous ne le recevez pas.</span>
+    </div>
+    <div class="fg">
+      <label>Code de vérification</label>
+      <div style="display:flex;gap:8px">
+        <input type="text" class="inp" id="otpInput" placeholder="123456" maxlength="6" inputmode="numeric"
+          style="letter-spacing:6px;font-size:1.1rem;text-align:center;font-family:var(--mono)"
+          onkeypress="if(event.key==='Enter')verifyOtp('${mode}')"
+          oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+        <button class="btn btn-ghost" onclick="pasteOtp()" title="Coller" style="flex-shrink:0;padding:0 14px;font-size:1rem">📋</button>
+      </div>
+    </div>
+    <div class="err-msg" id="otpErr"></div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn btn-primary" style="flex:1" id="otpBtn" onclick="verifyOtp('${mode}')">✓ Valider →</button>
+      <button class="btn btn-ghost" onclick="resendOtp('${mode}')" id="resendBtn" style="flex-shrink:0">↺ Renvoyer</button>
+    </div>
+    <div style="margin-top:10px;text-align:center">
+      <button class="btn btn-ghost btn-sm" onclick="${mode==='register'?`switchAuth('register')`:`cancelEmailChange()`}" style="font-size:.72rem;color:var(--txt3)">← Retour</button>
+    </div>`;
+
+  if(mode==='register'){
+    $('authTitle').textContent=title;
+    document.querySelectorAll('.auth-tab').forEach(t=>t.style.display='none');
+    $('authForm').innerHTML=html;
+  } else {
+    $(target).innerHTML=html;
+  }
+  setTimeout(()=>{ const el=$('otpInput'); if(el)el.focus(); }, 100);
+}
+
+async function pasteOtp(){
+  try{
+    const text=await navigator.clipboard.readText();
+    const digits=text.replace(/[^0-9]/g,'').slice(0,6);
+    const el=$('otpInput'); if(el){ el.value=digits; el.focus(); }
+  }catch{
+    toast('Autorisez le presse-papiers pour coller le code','error');
+  }
+}
+
+async function verifyOtp(mode){
+  const code=($('otpInput')?.value||'').trim();
+  const errEl=$('otpErr'), btn=$('otpBtn');
+  if(!code||code.length!==6){if(errEl)errEl.textContent='✕ Code à 6 chiffres requis';return;}
+  if(btn){btn.disabled=true;btn.textContent='⟳ Vérification...';}
+
+  if(mode==='register'){
+    const data=await apiPost('/api/auth/otp/verify-register',{username:_otpPending.username,code});
+    if(data.error){if(errEl)errEl.textContent='✕ '+data.error;if(btn){btn.disabled=false;btn.textContent='✓ Valider →';}return;}
     curUser={username:data.username,role:data.role,emoji:data.emoji,token:data.token,email:data.email||''};
     localStorage.setItem('cw_session',JSON.stringify(curUser));
-    await loadMe(); closeOv('authOv'); updateHdr(); renderSup(); toast(`✓ Bienvenue, ${u} !`);
-  } else {
-    err.className='ok-msg'; err.textContent='✓ Compte créé ! Connectez-vous.'; switchAuth('login');
+    _otpPending=null;
+    await loadMe(); closeOv('authOv'); updateHdr(); renderSup();
+    document.querySelectorAll('.auth-tab').forEach(t=>t.style.display='');
+    toast(`✓ Bienvenue, ${curUser.username} !`);
+  } else if(mode==='email'){
+    const data=await apiPost('/api/auth/otp/verify-email',{newEmail:_emailChangePending.newEmail,code});
+    if(data.error){if(errEl)errEl.textContent='✕ '+data.error;if(btn){btn.disabled=false;btn.textContent='✓ Valider →';}return;}
+    curUser.email=data.email;
+    localStorage.setItem('cw_session',JSON.stringify(curUser));
+    _emailChangePending=null;
+    $('emailOtpZone').innerHTML='';
+    const msgEl=$('setMsg'); if(msgEl){msgEl.className='ok-msg';msgEl.textContent='✓ Email mis à jour !';}
+    toast('Email mis à jour !'); updateHdr();
   }
-  btn.disabled=false; btn.textContent='Créer mon compte →';
+  if(btn){btn.disabled=false;btn.textContent='✓ Valider →';}
 }
+
+async function resendOtp(mode){
+  const email = mode==='register' ? _otpPending?.email : _emailChangePending?.newEmail;
+  const username = mode==='register' ? _otpPending?.username : curUser?.username;
+  if(!email||!username)return;
+  const btn=$('resendBtn'); if(btn){btn.disabled=true;btn.textContent='⟳ Envoi...';}
+  await apiPost('/api/auth/otp/resend',{username,email});
+  if(btn){btn.disabled=false;btn.textContent='↺ Renvoyer';}
+  toast('Code renvoyé !');
+}
+
+function cancelEmailChange(){
+  _emailChangePending=null;
+  const z=$('emailOtpZone'); if(z)z.innerHTML='';
+  const msgEl=$('setMsg'); if(msgEl){msgEl.className='err-msg';msgEl.textContent='';}
+}
+
 async function logout(){
   await setOnline(false); curUser=null; localStorage.removeItem('cw_session'); updateHdr(); renderSup(); toast('Déconnecté.');
 }
@@ -644,16 +749,43 @@ async function logout(){
 /* ══ SETTINGS ══ */
 async function openSettings(){
   if(!curUser)return;
-  $('settBody').innerHTML=`<div style="margin-bottom:14px;padding:12px 14px;background:var(--surf2);border:1px solid var(--bdr);border-radius:var(--r);display:flex;align-items:center;gap:12px"><div style="width:44px;height:44px;border-radius:50%;background:var(--surf3);border:2px solid var(--bdr2);display:flex;align-items:center;justify-content:center;font-size:1.4rem">${curUser.emoji||'👤'}</div><div><div style="font-weight:700;font-size:.92rem">${esc(curUser.username)}</div><div style="font-size:.68rem;color:var(--accent)">${curUser.role}</div></div></div>
-  <div class="fg"><label>Avatar (emoji)</label><input type="text" class="inp" id="setEmoji" value="${esc(curUser.emoji||'👤')}" maxlength="2"></div>
-  <div class="fg"><label>Actuel</label><input type="password" class="inp" id="setPwC"></div>
-  <div class="fg"><label>Nouveau mot de passe</label><input type="password" class="inp" id="setPwN"></div>
-  <div class="fg"><label>Confirmer</label><input type="password" class="inp" id="setPwCf"></div>
-  <div id="setMsg" class="err-msg" style="margin-bottom:10px"></div>
-  <button class="btn btn-primary btn-full" onclick="saveSettings()" style="margin-bottom:10px">💾 Sauvegarder</button>
-  <button class="btn btn-danger btn-full" onclick="logout();closeOv('settOv')">🚪 Se déconnecter</button>`;
+  $('settBody').innerHTML=`
+    <div style="margin-bottom:14px;padding:12px 14px;background:var(--surf2);border:1px solid var(--bdr);border-radius:var(--r);display:flex;align-items:center;gap:12px">
+      <div style="width:44px;height:44px;border-radius:50%;background:var(--surf3);border:2px solid var(--bdr2);display:flex;align-items:center;justify-content:center;font-size:1.4rem">${curUser.emoji||'👤'}</div>
+      <div><div style="font-weight:700;font-size:.92rem">${esc(curUser.username)}</div><div style="font-size:.68rem;color:var(--accent)">${curUser.role}</div></div>
+    </div>
+    <div class="fg"><label>Avatar (emoji)</label><input type="text" class="inp" id="setEmoji" value="${esc(curUser.emoji||'👤')}" maxlength="2"></div>
+    <div class="fg">
+      <label>Email actuel</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="text" class="inp" value="${esc(curUser.email||'—')}" readonly style="color:var(--txt3);cursor:default;flex:1">
+        <button class="btn btn-ghost btn-sm" onclick="startEmailChange()" style="flex-shrink:0;white-space:nowrap">✏️ Changer</button>
+      </div>
+    </div>
+    <div id="emailOtpZone" style="margin-bottom:10px"></div>
+    <div class="fg"><label>Mot de passe actuel</label><input type="password" class="inp" id="setPwC"></div>
+    <div class="fg"><label>Nouveau mot de passe</label><input type="password" class="inp" id="setPwN"></div>
+    <div class="fg"><label>Confirmer</label><input type="password" class="inp" id="setPwCf"></div>
+    <div id="setMsg" class="err-msg" style="margin-bottom:10px"></div>
+    <button class="btn btn-primary btn-full" onclick="saveSettings()" style="margin-bottom:10px">💾 Sauvegarder</button>
+    <button class="btn btn-danger btn-full" onclick="logout();closeOv('settOv')">🚪 Se déconnecter</button>`;
   $('settOv').classList.add('open');
 }
+
+async function startEmailChange(){
+  const newEmail=prompt('Nouvel email :');
+  if(!newEmail||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)){
+    if(newEmail!==null)toast('Email invalide','error');
+    return;
+  }
+  if(newEmail===curUser.email){toast('C\'est déjà votre email','error');return;}
+  const msgEl=$('setMsg'); if(msgEl){msgEl.textContent='';}
+  const res=await apiPost('/api/auth/otp/request-email',{newEmail});
+  if(res.error){toast('✕ '+res.error,'error');return;}
+  _emailChangePending={newEmail};
+  showOtpForm('email');
+}
+
 async function saveSettings(){
   const emoji=$('setEmoji').value.trim()||'👤';
   const c=$('setPwC').value, n=$('setPwN').value, cf=$('setPwCf').value;
