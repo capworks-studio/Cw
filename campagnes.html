@@ -171,7 +171,24 @@ footer a:hover{text-decoration:underline}
   .camp-grid{grid-template-columns:1fr}
 }
 </style>
-<script src="maintenance.js"></script>
+
+<script>
+(function(){
+  var req = new XMLHttpRequest();
+  req.open('GET', 'maintenance.js?t=' + Date.now(), false); // synchronous + cache-bust
+  req.setRequestHeader('Cache-Control','no-cache, no-store, must-revalidate');
+  req.setRequestHeader('Pragma','no-cache');
+  req.setRequestHeader('Expires','0');
+  try { req.send(null); } catch(e){ return; }
+  if(req.status === 200){
+    var text = req.responseText;
+    var m = text.match(/IS_MAINTENANCE\s*=\s*(true|false)/);
+    if(m && m[1] === 'true'){
+      window.location.replace('index.html');
+    }
+  }
+})();
+</script>
 </head>
 <body>
 
