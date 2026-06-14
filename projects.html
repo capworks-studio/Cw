@@ -509,6 +509,7 @@ function buildCard(cat,proj,idx){
   if(cat==='software' && proj.version){
     extra=`<div style="font-family:var(--mono);font-size:.65rem;color:var(--txt3);margin-bottom:9px">v${esc(proj.version)}${proj.os?' · '+esc(proj.os):''}</div>`;
   }
+  if(cat==='assets' && (proj.files?.length||proj.folders?.length)){
     extra=`<div class="folder-tree">${buildMiniTree(proj.folders||[],proj.files||[])}</div>`;
   }
   if(cat==='animations' && proj.duration){
