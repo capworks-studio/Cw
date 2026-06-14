@@ -134,19 +134,41 @@ nav a.active{color:var(--accent);background:rgba(108,92,231,.1)}
 
 /* Media — single absolutely-positioned element, container clips: prevents the
    "two half-images" bug caused by stacked/overflowing media elements */
-.card-media{position:relative;width:100%;overflow:hidden;background:var(--surf2);display:block}
-.card-media.ratio-16-9{aspect-ratio:16/9}
-.card-media.compact{aspect-ratio:16/9}
-.card-media>img,.card-media>video,.card-media>iframe{display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;border:none}
+/* Media container — aspect-ratio 16/9, clipped, no overflow = no half-image bug */
+.card-media{position:relative;width:100%;overflow:hidden;background:var(--surf2);display:block;aspect-ratio:16/9}
+/* Carousel slides */
+.carousel{position:absolute;inset:0;display:flex;transition:transform .35s cubic-bezier(.4,0,.2,1)}
+.carousel-slide{position:relative;min-width:100%;height:100%;flex-shrink:0;overflow:hidden}
+.carousel-slide>img,.carousel-slide>video,.carousel-slide>iframe{display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;border:none}
+/* Carousel nav arrows */
+.car-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:4;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.15);color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.8rem;transition:all .2s;opacity:0;pointer-events:none}
+.card-media:hover .car-arrow{opacity:1;pointer-events:auto}
+.car-arrow:hover{background:rgba(0,0,0,.8)}
+.car-prev{left:8px}
+.car-next{right:8px}
+/* Carousel dots */
+.car-dots{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:4}
+.car-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.4);border:none;padding:0;cursor:pointer;transition:all .2s}
+.car-dot.active{background:#fff;width:14px;border-radius:3px}
+/* Counter badge */
+.car-count{position:absolute;top:9px;left:9px;font-family:var(--mono);font-size:.6rem;color:#fff;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);padding:2px 8px;border-radius:99px;border:1px solid rgba(255,255,255,.1);z-index:4}
 .card-no-media{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2.4rem;background:var(--surf2)}
-.card-media-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(6,6,14,.6) 0%,transparent 55%);pointer-events:none}
-.play-btn{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.4);cursor:pointer;transition:background .2s}
+.card-media-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(6,6,14,.6) 0%,transparent 55%);pointer-events:none;z-index:2}
+.play-btn{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.4);cursor:pointer;transition:background .2s;z-index:3}
 .play-btn:hover{background:rgba(0,0,0,.25)}
 .play-circle{width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.15);backdrop-filter:blur(8px);border:2px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:1.3rem;padding-left:3px;transition:transform .2s}
 .play-btn:hover .play-circle{transform:scale(1.1)}
-.card-stats{position:absolute;bottom:8px;right:9px;display:flex;gap:5px;z-index:3}
+.card-stats{position:absolute;bottom:8px;right:9px;display:flex;gap:5px;z-index:5}
 .stat-chip{display:flex;align-items:center;gap:3px;font-family:var(--mono);font-size:.6rem;color:rgba(255,255,255,.75);background:rgba(0,0,0,.55);backdrop-filter:blur(6px);padding:2px 7px;border-radius:99px;border:1px solid rgba(255,255,255,.08)}
-.duration-badge{position:absolute;bottom:8px;left:9px;font-family:var(--mono);font-size:.62rem;color:#fff;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);padding:2px 8px;border-radius:99px;border:1px solid rgba(255,255,255,.1)}
+.duration-badge{position:absolute;bottom:8px;left:9px;font-family:var(--mono);font-size:.62rem;color:#fff;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);padding:2px 8px;border-radius:99px;border:1px solid rgba(255,255,255,.1);z-index:5}
+/* Modal gallery */
+.modal-gallery{position:relative;border-radius:var(--r3) var(--r3) 0 0;overflow:hidden;background:#000;aspect-ratio:16/9}
+.modal-gallery .carousel{transition:transform .4s cubic-bezier(.4,0,.2,1)}
+.modal-gallery .carousel-slide>img,.modal-gallery .carousel-slide>iframe,.modal-gallery .carousel-slide>video{object-fit:contain;background:#000}
+.modal-gallery .car-arrow{opacity:.7;pointer-events:auto;width:36px;height:36px;font-size:1rem}
+.modal-gallery .car-arrow:hover{opacity:1}
+.modal-gallery .car-dots{bottom:12px}
+.modal-gallery .car-count{font-size:.68rem}
 
 .card-body{padding:16px 18px 18px}
 .card-tags{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:9px}
@@ -459,36 +481,84 @@ function buildCatSection(cat,items){
   return wrap;
 }
 
-/* ── Media: single absolutely-positioned element inside an aspect-ratio
-   container with overflow:hidden. Previously the bug ("right half of one
-   image + left half of another") came from images without a fixed,
-   clipped container — now every media block uses .card-media (clipped,
-   aspect-ratio) with exactly one <img>/<iframe> filling it via inset:0. ── */
-function mediaHtml(proj,cat){
-  if(proj.videoUrl && (proj.videoUrl.includes('youtube')||proj.videoUrl.includes('youtu.be'))){
-    const vid=ytId(proj.videoUrl);
-    return `<div class="card-media ratio-16-9">
-      <div class="play-btn" onclick="openYT('${vid}',event)">
-        <img src="https://img.youtube.com/vi/${vid}/mqdefault.jpg" loading="lazy" alt="">
-        <div class="card-media-overlay"></div>
-        <div class="play-circle">▶</div>
-      </div>
-      ${proj.duration?`<div class="duration-badge">⏱ ${esc(proj.duration)}</div>`:''}
-      <div class="card-stats">${statsHtml(proj)}</div>
-    </div>`;
-  }
-  if(proj.imageUrl){
-    return `<div class="card-media ratio-16-9">
-      <img src="${esc(proj.imageUrl)}" alt="${esc(proj.title||'')}" loading="lazy">
-      <div class="card-media-overlay"></div>
-      ${proj.duration?`<div class="duration-badge">⏱ ${esc(proj.duration)}</div>`:''}
-      <div class="card-stats">${statsHtml(proj)}</div>
-    </div>`;
-  }
-  return `<div class="card-media compact">
-    <div class="card-no-media">${CAT_META[cat]?.icon||'📁'}</div>
-    <div class="card-stats">${statsHtml(proj)}</div>
+/* ── Carousel engine ── */
+const _carState={};
+function _getMediaItems(proj){
+  // Merge imageUrl + images[] + videoUrl + videos[]
+  const items=[];
+  // Videos first
+  const vids=[
+    ...(proj.videoUrl?[proj.videoUrl]:[]),
+    ...( Array.isArray(proj.videos)?proj.videos:(typeof proj.videos==='string'?proj.videos.split('\n').map(s=>s.trim()).filter(Boolean):[]) )
+  ];
+  vids.forEach(u=>{ if(u) items.push({type:'video',url:u}); });
+  // Images
+  const imgs=[
+    ...(proj.imageUrl?[proj.imageUrl]:[]),
+    ...( Array.isArray(proj.images)?proj.images:(typeof proj.images==='string'?proj.images.split('\n').map(s=>s.trim()).filter(Boolean):[]) )
+  ];
+  imgs.forEach(u=>{ if(u) items.push({type:'image',url:u}); });
+  return items;
+}
+function carGo(cid,dir){
+  const s=_carState[cid]; if(!s)return;
+  s.idx=(s.idx+dir+s.total)%s.total;
+  _carRender(cid);
+}
+function carGoTo(cid,idx){
+  const s=_carState[cid]; if(!s)return;
+  s.idx=idx; _carRender(cid);
+}
+function _carRender(cid){
+  const s=_carState[cid]; if(!s)return;
+  const el=document.getElementById(cid);
+  if(!el)return;
+  const track=el.querySelector('.carousel');
+  if(track) track.style.transform=`translateX(-${s.idx*100}%)`;
+  el.querySelectorAll('.car-dot').forEach((d,i)=>d.classList.toggle('active',i===s.idx));
+  const cnt=el.querySelector('.car-count');
+  if(cnt) cnt.textContent=`${s.idx+1}/${s.total}`;
+}
+
+function buildCarousel(items,stats,durBadge,cid,modal=false){
+  if(!items.length) return `<div class="card-media"><div class="card-no-media">📁</div>${stats}</div>`;
+  _carState[cid]={idx:0,total:items.length};
+  const slides=items.map(item=>{
+    if(item.type==='video'){
+      const vid=ytId(item.url);
+      if(vid){
+        const thumb=`https://img.youtube.com/vi/${vid}/mqdefault.jpg`;
+        return `<div class="carousel-slide">
+          <div class="play-btn" onclick="event.stopPropagation();openYT('${vid}',event)">
+            <img src="${thumb}" loading="lazy" alt="">
+            <div class="card-media-overlay"></div>
+            <div class="play-circle">▶</div>
+          </div>
+        </div>`;
+      }
+      return `<div class="carousel-slide"><video src="${esc(item.url)}" preload="metadata" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border:none"></video></div>`;
+    }
+    return `<div class="carousel-slide"><img src="${esc(item.url)}" alt="" loading="lazy"><div class="card-media-overlay"></div></div>`;
+  }).join('');
+  const arrows=items.length>1?`
+    <button class="car-arrow car-prev" onclick="event.stopPropagation();carGo('${cid}',-1)">‹</button>
+    <button class="car-arrow car-next" onclick="event.stopPropagation();carGo('${cid}',1)">›</button>`:'';
+  const dots=items.length>1?`<div class="car-dots">${items.map((_,i)=>`<button class="car-dot${i===0?' active':''}" onclick="event.stopPropagation();carGoTo('${cid}',${i})"></button>`).join('')}</div>`:'';
+  const counter=items.length>1?`<span class="car-count">1/${items.length}</span>`:'';
+  const wrap=modal?'modal-gallery':'card-media';
+  return `<div class="${wrap}" id="${cid}">
+    <div class="carousel">${slides}</div>
+    ${arrows}${dots}${counter}${durBadge}${stats}
   </div>`;
+}
+
+/* ── mediaHtml: builds carousel from all images+videos ── */
+function mediaHtml(proj,cat){
+  const items=_getMediaItems(proj);
+  const cid='car_'+proj.id.replace(/[^a-z0-9]/gi,'_')+'_'+cat;
+  const stats=`<div class="card-stats">${statsHtml(proj)}</div>`;
+  const dur=proj.duration&&(cat==='animations'||cat==='music')?`<div class="duration-badge">⏱ ${esc(proj.duration)}</div>`:'';
+  return buildCarousel(items,stats,dur,cid,false);
 }
 function statsHtml(proj){
   const v=(proj.views||0)>0?`<span class="stat-chip">👁 ${fmt(proj.views)}</span>`:'';
@@ -563,7 +633,8 @@ function buildCard(cat,proj,idx){
     }
   }
 
-  const media=(cat==='bots' && !proj.imageUrl && !proj.videoUrl)?'':mediaHtml(proj,cat);
+  const items=_getMediaItems(proj);
+  const media=(cat==='bots' && !items.length)?'':mediaHtml(proj,cat);
 
   card.innerHTML=`${media}
     <div class="card-body">
@@ -594,12 +665,12 @@ function buildMiniTree(folders,files){
 function openProjectModal(cat,proj){
   if(settings.enableViews!==false){ trackView(cat,proj.id); proj.views=(proj.views||0)+1; }
   const liked=likedProjects[cat+':'+proj.id]||likedProjects[proj.id];
+  const items=_getMediaItems(proj);
+  const mcid='mcar_'+proj.id.replace(/[^a-z0-9]/gi,'_');
   let mediaEl='';
-  if(proj.videoUrl && (proj.videoUrl.includes('youtube')||proj.videoUrl.includes('youtu.be'))){
-    const vid=ytId(proj.videoUrl);
-    mediaEl=`<div class="modal-proj-media"><iframe src="https://www.youtube.com/embed/${vid}?autoplay=1&rel=0" allow="autoplay;encrypted-media" allowfullscreen></iframe></div>`;
-  } else if(proj.imageUrl){
-    mediaEl=`<div class="modal-proj-media"><img src="${esc(proj.imageUrl)}" alt="${esc(proj.title||'')}"></div>`;
+  if(items.length){
+    mediaEl=buildCarousel(items,'','',mcid,true);
+    setTimeout(()=>{ _carState[mcid]={idx:0,total:items.length}; _carRender(mcid); },30);
   }
   let meta='';
   if(cat==='sites'){ meta+=mi('🔗 URL',proj.url||'—')+mi('📊 Statut',proj.status==='live'?'🟢 En ligne':'🟡 WIP'); }
