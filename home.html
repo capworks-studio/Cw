@@ -83,7 +83,10 @@ select.inp option{background:var(--surf2)}
 .sec-div{height:1px;background:linear-gradient(90deg,transparent,var(--bdr),transparent);margin:0 40px}
 
 /* HERO */
-.hero{position:relative;z-index:1;text-align:center;padding:96px 40px 64px;overflow:hidden}
+.hero{position:relative;z-index:1;text-align:center;padding:0 40px;overflow:hidden;min-height:calc(100vh - 62px);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.hero-scroll{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--txt3);font-size:.66rem;letter-spacing:2px;text-transform:uppercase;animation:scrollBounce 2s ease-in-out infinite}
+@keyframes scrollBounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(6px)}}
+.hero-scroll-arrow{width:20px;height:20px;border-right:2px solid var(--txt3);border-bottom:2px solid var(--txt3);transform:rotate(45deg);margin-top:-4px}
 .hero-glow{position:absolute;top:-100px;left:50%;transform:translateX(-50%);width:700px;height:500px;pointer-events:none;background:radial-gradient(ellipse,rgba(108,92,231,.08) 0%,transparent 65%)}
 .hero-badge{display:inline-flex;align-items:center;gap:8px;margin-bottom:32px;font-size:.68rem;color:var(--cyan);letter-spacing:2px;text-transform:uppercase;border:1px solid rgba(0,206,201,.22);background:rgba(0,206,201,.05);padding:6px 16px;border-radius:99px}
 .hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:blink 1.6s infinite}
@@ -221,7 +224,7 @@ footer a:hover{text-decoration:underline}
 @media(max-width:900px){
   header{padding:0 16px}
   nav{display:none}
-  .hero{padding:56px 16px 44px}
+  .hero{padding:0 16px;min-height:calc(100svh - 62px)}
   .section{padding:56px 16px}
   .team-grid{grid-template-columns:1fr}
   .about-grid,.contact-grid{grid-template-columns:1fr}
@@ -282,14 +285,13 @@ footer a:hover{text-decoration:underline}
     <a href="campagnes.html" class="btn btn-gold">💛 Soutenir un projet</a>
     <a href="https://discord.gg/RSnKYzXsgm" target="_blank" class="btn btn-ghost">💬 Discord</a>
   </div>
+  <div class="hero-scroll"><span>Scroll</span><div class="hero-scroll-arrow"></div></div>
 </section>
 
+<div class="sec-div"></div>
+
 <!-- ══════════════ QUICK LINKS ══════════════ -->
-<section class="section">
-  <div class="sec-head">
-    <span class="sec-tag">// navigation</span>
-    <h2>Explorez CapWorks Studio</h2>
-  </div>
+<section class="section" style="padding-top:48px;padding-bottom:48px">
   <div class="qlinks">
     <a href="projects.html" class="qlink" style="animation-delay:.05s">
       <div class="qicon">🗂</div>
