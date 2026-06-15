@@ -54,7 +54,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--txt);min-height:10
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes modalIn{from{opacity:0;transform:scale(.94) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
 
-/* HEADER */
 header{position:sticky;top:0;z-index:100;height:60px;padding:0 28px;display:flex;align-items:center;justify-content:space-between;
   background:rgba(6,6,14,.94);backdrop-filter:blur(20px);border-bottom:1px solid var(--bdr)}
 .logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--txt);font-family:var(--display);font-size:1.05rem;font-weight:700;letter-spacing:-.3px}
@@ -62,7 +61,6 @@ header{position:sticky;top:0;z-index:100;height:60px;padding:0 28px;display:flex
 .logo-img img{width:100%;height:100%;object-fit:cover}
 .logo em{font-style:normal;color:var(--cyan)}
 
-/* BUTTONS */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 16px;border-radius:var(--r);font-family:var(--font);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .18s;border:none;text-decoration:none;line-height:1.2;white-space:nowrap}
 .btn:active{transform:scale(.96)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
@@ -76,7 +74,6 @@ header{position:sticky;top:0;z-index:100;height:60px;padding:0 28px;display:flex
 .btn-sm{padding:5px 12px;font-size:.73rem;border-radius:7px}
 .btn-full{width:100%}
 
-/* INPUTS */
 .inp{width:100%;background:var(--surf2);border:1.5px solid var(--bdr2);color:var(--txt);padding:8px 12px;border-radius:var(--r);font-family:var(--font);font-size:.8rem;outline:none;transition:border-color .2s}
 .inp:focus{border-color:var(--accent)}
 .inp::placeholder{color:var(--txt3)}
@@ -92,7 +89,6 @@ select.inp{cursor:pointer}
 .tog-btn.on{background:var(--accent)}
 .tog-btn.on::after{transform:translateX(17px);background:#fff}
 
-/* LAYOUT */
 .layout{display:grid;grid-template-columns:200px 1fr;min-height:calc(100vh - 60px)}
 .sidebar{border-right:1px solid var(--bdr);padding:18px 12px;background:var(--surf)}
 .side-section{margin-bottom:6px}
@@ -106,7 +102,6 @@ select.inp{cursor:pointer}
 .content h2{font-family:var(--display);font-size:1.4rem;font-weight:800;letter-spacing:-.5px;margin-bottom:4px}
 .content .sub{color:var(--txt2);font-size:.8rem;margin-bottom:22px}
 
-/* PROJECT LIST */
 .item-row{display:flex;align-items:center;gap:12px;background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r2);padding:12px 16px;margin-bottom:8px;animation:fadeUp .3s ease both}
 .item-row:hover{border-color:var(--bdr2)}
 .item-thumb{width:54px;height:36px;border-radius:7px;background:var(--surf2);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
@@ -119,7 +114,6 @@ select.inp{cursor:pointer}
 .item-badge.hl{background:var(--goldg);color:var(--gold);border:1px solid rgba(253,203,110,.3)}
 .item-actions{display:flex;gap:6px;flex-shrink:0}
 
-/* CARD / SECTION */
 .card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r2);padding:20px}
 .card+.card{margin-top:14px}
 .card h3{font-size:.92rem;font-weight:700;margin-bottom:14px;font-family:var(--display)}
@@ -128,7 +122,6 @@ select.inp{cursor:pointer}
 .cat-tab.active{background:rgba(108,92,231,.14);border-color:rgba(108,92,231,.45);color:var(--txt)}
 .empty-hint{text-align:center;padding:30px;color:var(--txt3);font-size:.8rem}
 
-/* FORM MODAL */
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(10px);z-index:200;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
 .overlay.open{display:flex}
 .modal{background:var(--surf);border:1px solid var(--bdr2);border-radius:var(--r3);width:100%;max-width:620px;margin:auto;animation:modalIn .25s ease}
@@ -140,19 +133,16 @@ select.inp{cursor:pointer}
 .fieldset-title{font-size:.62rem;letter-spacing:2px;text-transform:uppercase;color:var(--accent);font-weight:700;margin:18px 0 8px;padding-top:10px;border-top:1px solid var(--bdr)}
 .fieldset-title:first-child{border-top:none;margin-top:0;padding-top:0}
 
-/* LOGIN */
 .login-wrap{min-height:calc(100vh - 60px);display:flex;align-items:center;justify-content:center;padding:20px}
 .login-card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r2);padding:30px;width:100%;max-width:380px;text-align:center}
 .login-card h2{font-family:var(--display);font-weight:800;font-size:1.3rem;margin-bottom:6px}
 .login-card p{color:var(--txt2);font-size:.8rem;margin-bottom:20px}
 .err-msg{color:var(--red);font-size:.74rem;margin-top:8px}
 
-/* TOAST */
 .toast{position:fixed;bottom:22px;right:22px;background:var(--surf2);border:1px solid var(--bdr2);border-radius:var(--r);padding:11px 15px;font-size:.78rem;z-index:9999;animation:modalIn .3s ease;max-width:280px}
 .toast.success{border-color:rgba(0,184,148,.45)}
 .toast.error{border-color:rgba(232,67,147,.45)}
 
-/* STATS GRID */
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px}
 .stat-box{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r2);padding:16px;text-align:center}
 .stat-box .val{font-size:1.6rem;font-weight:800;color:var(--accent);font-family:var(--display)}
@@ -171,7 +161,7 @@ select.inp{cursor:pointer}
 <script>
 (function(){
   var req = new XMLHttpRequest();
-  req.open('GET', 'maintenance.js?t=' + Date.now(), false); // synchronous + cache-bust
+  req.open('GET', 'maintenance.js?t=' + Date.now(), false);
   req.setRequestHeader('Cache-Control','no-cache, no-store, must-revalidate');
   req.setRequestHeader('Pragma','no-cache');
   req.setRequestHeader('Expires','0');
@@ -238,8 +228,7 @@ select.inp{cursor:pointer}
   <main class="content" id="content"></main>
 </div>
 
-
-<!-- GENERIC FORM MODAL (campaigns / team) -->
+<!-- GENERIC FORM MODAL -->
 <div class="overlay" id="genFormOv" onclick="ovClick(event,'genFormOv')">
   <div class="modal">
     <div class="modal-hd"><h3 id="genFormTitle">Élément</h3><button class="x-btn" onclick="closeOv('genFormOv')">✕</button></div>
@@ -271,11 +260,9 @@ let projects={}; CATS.forEach(c=>projects[c]=[]);
 let campaigns=[], team=[], activeCat='sites', activeView='projects';
 let settings={ enableLikes:true, enableViews:true, enableDownloadCount:true, showHighlights:true };
 
-/* ══ API helpers ══ */
 async function apiGet(path){try{const r=await fetch(API+path,{headers:curUser?.token?{Authorization:`Bearer ${curUser.token}`}:{}});if(!r.ok)return{error:`HTTP ${r.status}`};return r.json();}catch(e){return{error:'Réseau'};}}
 async function apiPost(path,body,method='POST'){try{const r=await fetch(API+path,{method,headers:{'Content-Type':'application/json',...(curUser?.token&&{Authorization:`Bearer ${curUser.token}`})},body:JSON.stringify(body)});try{return await r.json();}catch{return{ok:r.ok,error:r.ok?undefined:`HTTP ${r.status}`};}}catch(e){return{error:'Réseau'};}}
 
-/* ══ AUTH / LOGIN WALL ══ */
 async function doAdminLogin(){
   const u=$('lUser').value.trim(), p=$('lPass').value;
   const err=$('lErr');
@@ -291,7 +278,6 @@ function logout(){ curUser=null; localStorage.removeItem('cw_session'); location
 
 async function initAdmin(){
   if(!curUser||!curUser.token){ showLogin(); return; }
-  // verify role still owner
   const me=await apiGet('/api/user/me');
   if(me?.error || me.role!=='owner'){ showLogin('Session invalide ou rôle insuffisant.'); return; }
   curUser={...curUser,...me};
@@ -309,7 +295,6 @@ function showLogin(msg){
 }
 function waitForFirebase(){return new Promise(resolve=>{if(window.__firebaseReady){resolve();return;}document.addEventListener('firebase-ready',resolve,{once:true});setTimeout(resolve,6000);});}
 
-/* ══ FIRESTORE DATA ══ */
 async function loadAllProjects(){
   for(const cat of CATS){
     const snap=await FB.getDocs(FB.collection(db,`projects_${cat}`));
@@ -323,7 +308,6 @@ async function loadSettings(){
 async function loadCampaigns(){ const d=await apiGet('/api/admin/campaigns'); campaigns=Array.isArray(d)?d:[]; }
 async function loadTeam(){ const d=await apiGet('/api/team'); team=Array.isArray(d)?d:[]; }
 
-/* ══ VIEW ROUTER ══ */
 function switchView(view){
   if(view!=='users' && _usersUnsub){ _usersUnsub(); _usersUnsub=null; }
   activeView=view;
@@ -379,7 +363,6 @@ async function deleteProj(cat,id){
   toast('Projet supprimé'); renderProjList();
 }
 
-/* ── Project form fields per category ── */
 const CAT_FIELDS={
   sites:[ ['url','URL du site','text'], ['status','Statut','select',['live:🟢 En ligne','wip:🟡 En développement']], ['repoUrl','Lien du code (repo)','text'] ],
   games:[ ['downloadUrl','Lien de téléchargement','text'], ['playUrl','Lien pour jouer (web)','text'], ['platforms','Plateformes (ex: Windows, Web)','text'], ['repoUrl','Lien du code (repo)','text'] ],
@@ -391,7 +374,6 @@ const CAT_FIELDS={
   assets:[ ['downloadUrl','Lien de téléchargement (ZIP)','text'], ['size',"Taille de l'archive (ex: 24 Mo)",'text'], ['license','Licence','text'], ['folderTree','Arborescence des fichiers','tree'] ],
   other:[ ['url','Lien principal','text'], ['downloadUrl','Lien de téléchargement','text'] ]
 };
-// Champs communs à toutes les catégories (sans durée — elle est dans les champs spécifiques si pertinente)
 const COMMON_FIELDS=[
   ['title','Titre','text'], ['desc','Description courte','textarea'], ['longDesc','Description complète','textarea'],
   ['tags','Tags (séparés par des virgules)','text'], ['tech','Technologies / outils','text'],
@@ -406,12 +388,11 @@ function fieldHtml(id,label,type,opts){
   const safeId='pf_'+id;
   if(type==='select'){ return `<div class="fg"><label>${label}</label><select class="inp" id="${safeId}">${opts.map(o=>{const[v,l]=o.split(':');return `<option value="${v}">${l}</option>`;}).join('')}</select></div>`; }
   if(type==='textarea')return `<div class="fg"><label>${label}</label><textarea class="inp" id="${safeId}"></textarea></div>`;
-  if(type==='tree')return `<div class="fg"><label>${label}</label><textarea class="inp" id="${safeId}" placeholder="[Documents]: guide.pdf, notes.txt&#10;readme.md"></textarea><div style="font-size:.65rem;color:var(--txt3);margin-top:4px">Format : <code>[Nom du dossier]: fichier1, fichier2</code> — une ligne par dossier. Les lignes sans crochets sont des fichiers à la racine.</div></div>`;
+  if(type==='tree')return `<div class="fg"><label>${label}</label><textarea class="inp" id="${safeId}" placeholder="[Documents]: guide.pdf, notes.txt&#10;readme.md"></textarea><div style="font-size:.65rem;color:var(--txt3);margin-top:4px">Format : <code>[Nom du dossier]: fichier1, fichier2</code> — une ligne par dossier.</div></div>`;
   if(type==='number')return `<div class="fg"><label>${label}</label><input type="number" class="inp" id="${safeId}"></div>`;
   return `<div class="fg"><label>${label}</label><input type="text" class="inp" id="${safeId}"></div>`;
 }
 
-/* Convert folder-tree text <-> {folders:[{name,files:[{name}]}], files:[{name}]} */
 function textToTree(text){
   const folders=[], files=[];
   (text||'').split('\n').map(l=>l.trim()).filter(Boolean).forEach(line=>{
@@ -442,7 +423,6 @@ function openProjForm(cat,id){
   html+=`<div class="fieldset-title">Message attractif (highlight)</div>
     <div class="tog-row"><label>🔥 Afficher le message attractif sur ce projet</label><button class="tog-btn" id="pf_highlightOn_tog" onclick="toggleTog(this)"></button></div>
     <div class="fg"><label>Texte du message</label><textarea class="inp" id="pf_highlight" placeholder="Ex : Offre limitée, démo disponible, projet en vedette..."></textarea></div>
-    <div style="font-size:.65rem;color:var(--txt3);margin-top:-6px;margin-bottom:11px">Le réglage global « Afficher les messages attractifs » (onglet Paramètres) doit aussi être activé pour qu'il apparaisse sur le site.</div>
     <div class="fieldset-title">Visibilité</div>
     <div class="tog-row"><label>🙈 Masquer ce projet sur le site</label><button class="tog-btn" id="pf_hidden_tog" onclick="toggleTog(this)"></button></div>
     <div style="display:flex;gap:8px;margin-top:6px">
@@ -453,17 +433,13 @@ function openProjForm(cat,id){
   const wrap=$('projFormInline');
   wrap.innerHTML=html;
   wrap.style.display='block';
-
-  // populate values
   const all=[...COMMON_FIELDS,...(CAT_FIELDS[cat]||[])];
   all.forEach(([fid,,type])=>{
     const el=$('pf_'+fid); if(!el)return;
     if(type==='tree'){ el.value=treeToText(proj.folders,proj.files); return; }
-    // arrays → one per line
     if(fid==='images'||fid==='videos'){ el.value=Array.isArray(proj[fid])?proj[fid].join('\n'):(proj[fid]||''); return; }
     el.value=proj[fid]??'';
   });
-  // Champs gérés séparément
   const hlEl=$('pf_highlight'); if(hlEl) hlEl.value=proj.highlight||'';
   setTog('pf_highlightOn_tog',!!proj.highlightOn);
   setTog('pf_hidden_tog',!!proj.hidden);
@@ -481,7 +457,6 @@ async function saveProj(){
     const el=$('pf_'+fid); if(!el)return;
     if(type==='number'){ data[fid]=el.value?Number(el.value):0; return; }
     if(type==='tree'){ const tree=textToTree(el.value); data.folders=tree.folders; data.files=tree.files; return; }
-    // images / videos stored as arrays (one URL per line)
     if(fid==='images'||fid==='videos'){ data[fid]=el.value.split('\n').map(s=>s.trim()).filter(Boolean); return; }
     data[fid]=el.value.trim();
   });
@@ -489,9 +464,7 @@ async function saveProj(){
   data.highlightOn=$('pf_highlightOn_tog').classList.contains('on');
   data.hidden=$('pf_hidden_tog').classList.contains('on');
   data.order=Number(data.order)||999;
-  // likes/views/downloads sont gérés automatiquement par projects.html — on ne les écrase pas à la création
   if(!id){ data.likes=0; data.views=0; data.downloads=0; }
-
   try{
     if(id){ await FB.updateDoc(FB.doc(db,`projects_${cat}`,id),data); const idx=projects[cat].findIndex(p=>p.id===id); projects[cat][idx]={...projects[cat][idx],...data,id}; }
     else { const ref=await FB.addDoc(FB.collection(db,`projects_${cat}`),data); projects[cat].push({id:ref.id,...data}); }
@@ -627,7 +600,11 @@ async function deleteTeam(id){
 
 /* ══════════════ UTILISATEURS ══════════════ */
 const USER_ROLE_LBL={user:'Utilisateur',mod:'Modérateur',owner:'Administrateur'};
-const USER_ROLE_BADGE={user:'',mod:'<span class="item-badge" style="background:rgba(0,206,201,.12);color:var(--cyan);border:1px solid rgba(0,206,201,.3)">Modérateur</span>',owner:'<span class="item-badge" style="background:rgba(253,203,110,.12);color:var(--gold);border:1px solid rgba(253,203,110,.3)">Administrateur</span>'};
+const USER_ROLE_BADGE={
+  user:'',
+  mod:'<span class="item-badge" style="background:rgba(0,206,201,.12);color:var(--cyan);border:1px solid rgba(0,206,201,.3)">Modérateur</span>',
+  owner:'<span class="item-badge" style="background:rgba(253,203,110,.12);color:var(--gold);border:1px solid rgba(253,203,110,.3)">Administrateur</span>'
+};
 let _usersUnsub=null;
 async function renderUsersView(c){
   if(_usersUnsub){ _usersUnsub(); _usersUnsub=null; }
@@ -639,7 +616,7 @@ async function renderUsersView(c){
     <div class="item-row" data-username="${esc(u.username)}">
       <div class="item-thumb" style="position:relative">${u.emoji||'👤'}<span class="online-dot" style="position:absolute;bottom:-2px;right:-2px;width:11px;height:11px;border-radius:50%;border:2px solid var(--surf);background:${u.online?'var(--grn)':'var(--txt3)'};box-shadow:${u.online?'0 0 6px var(--grn)':'none'}"></span></div>
       <div class="item-main">
-        <div class="item-title">${esc(u.username)}<span class="online-label" style="font-size:.66rem;font-weight:600;color:${u.online?'var(--grn)':'var(--txt3)'}">${u.online?'● En ligne':'○ Hors ligne'}</span>${USER_ROLE_BADGE[u.role]||''}</div>
+        <div class="item-title">${esc(u.username)}${u.deleteRequest?.status==='pending'?'<span class="item-badge" style="background:rgba(232,67,147,.15);color:var(--red);border:1px solid rgba(232,67,147,.4);font-size:.55rem">🗑 SUPPRESSION</span>':''}<span class="online-label" style="font-size:.66rem;font-weight:600;color:${u.online?'var(--grn)':'var(--txt3)'}">${u.online?'● En ligne':'○ Hors ligne'}</span>${USER_ROLE_BADGE[u.role]||''}</div>
         <div class="item-meta">${esc(u.email||'—')} · ${USER_ROLE_LBL[u.role]||u.role||'Utilisateur'}</div>
       </div>
       <div class="item-actions">
@@ -648,14 +625,13 @@ async function renderUsersView(c){
           <option value="mod"${u.role==='mod'?' selected':''}>Modérateur</option>
           <option value="owner"${u.role==='owner'?' selected':''}>Administrateur</option>
         </select>
+        ${u.deleteRequest?.status==='pending'?`<button class="btn btn-ghost btn-sm" onclick="dismissDeleteRequest('${esc(u.username)}')" style="color:var(--red);border-color:rgba(232,67,147,.3)">✓ Traité</button>`:''}
         <button class="btn btn-danger btn-sm" onclick="deleteUser('${esc(u.username)}')">🗑</button>
       </div>
     </div>`).join('');
 
-  // Style fix for the inline title layout
-  $('usersList').querySelectorAll('.item-title').forEach(el=>{ el.style.display='flex'; el.style.alignItems='center'; el.style.gap='8px'; });
+  $('usersList').querySelectorAll('.item-title').forEach(el=>{ el.style.display='flex'; el.style.alignItems='center'; el.style.gap='8px'; el.style.flexWrap='wrap'; });
 
-  // Realtime online status via Firestore (cw_users collection)
   if(db && FB){
     try{
       _usersUnsub=FB.onSnapshot ? FB.onSnapshot(FB.collection(db,'cw_users'),snap=>{
@@ -682,6 +658,12 @@ async function deleteUser(username){
   const res=await apiPost('/api/admin/users',{username},'DELETE');
   if(res.error){ toast('Erreur : '+res.error,'error'); return; }
   toast('Utilisateur supprimé'); renderUsersView($('content'));
+}
+async function dismissDeleteRequest(username){
+  if(!confirm(`Marquer la demande de suppression de « ${username} » comme traitée ?`))return;
+  const res=await apiPost('/api/admin/users/delete-request/dismiss',{username});
+  if(res.error){ toast('Erreur : '+res.error,'error'); return; }
+  toast('Demande effacée'); renderUsersView($('content'));
 }
 
 /* ══════════════ TICKETS SUPPORT ══════════════ */
@@ -751,7 +733,6 @@ function renderSettingsView(c){
     <div class="tog-row"><label>👁 Activer le comptage des vues</label><button class="tog-btn ${settings.enableViews!==false?'on':''}" id="st_enableViews" onclick="toggleTog(this)"></button></div>
     <div class="tog-row"><label>↓ Activer le comptage des téléchargements</label><button class="tog-btn ${settings.enableDownloadCount!==false?'on':''}" id="st_enableDownloadCount" onclick="toggleTog(this)"></button></div>
     <div class="tog-row"><label>🔥 Afficher les messages attractifs (highlights)</label><button class="tog-btn ${settings.showHighlights!==false?'on':''}" id="st_showHighlights" onclick="toggleTog(this)"></button></div>
-    <div style="font-size:.68rem;color:var(--txt3);margin:8px 0 14px">Ce réglage active/désactive globalement l'affichage des bannières 🔥 sur la page Projets. Chaque projet a aussi son propre interrupteur dans son formulaire d'édition.</div>
     <button class="btn btn-primary" onclick="saveProjectSettings()">💾 Enregistrer</button>
   </div>
   <div class="card">
@@ -759,7 +740,7 @@ function renderSettingsView(c){
     <div class="fg"><label>Nouveau mot de passe</label><input type="password" class="inp" id="st_newPass" placeholder="Min. 8 caractères"></div>
     <div id="st_passMsg" style="font-size:.74rem;margin-bottom:8px"></div>
     <button class="btn btn-primary" onclick="changeAdminPassword()">Générer le nouveau hash</button>
-    <div style="font-size:.65rem;color:var(--txt3);margin-top:8px">Cette action génère un nouveau hash à copier manuellement dans la variable d'environnement <code>ADMIN_PASSWORD_HASH</code> du Worker (via <code>wrangler secret put</code>). Elle ne change rien automatiquement.</div>
+    <div style="font-size:.65rem;color:var(--txt3);margin-top:8px">Cette action génère un nouveau hash à copier dans la variable d'environnement <code>ADMIN_PASSWORD_HASH</code> du Worker.</div>
   </div>
   <div class="card">
     <h3>🔔 Webhook Discord</h3>
