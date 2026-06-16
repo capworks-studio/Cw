@@ -212,6 +212,7 @@ select.inp{cursor:pointer}
     </div>
     <div class="side-section">
       <div class="side-title">Contenu</div>
+      <div class="side-link" data-view="helfos" onclick="switchView('helfos')">🧠 Helfos <span class="cnt" id="helfosCnt">0</span></div>
       <div class="side-link" data-view="campaigns" onclick="switchView('campaigns')">💛 Campagnes</div>
       <div class="side-link" data-view="team" onclick="switchView('team')">👥 Équipe</div>
     </div>
@@ -228,6 +229,63 @@ select.inp{cursor:pointer}
     </div>
   </aside>
   <main class="content" id="content"></main>
+</div>
+
+
+<!-- HELFO FORM MODAL -->
+<div class="overlay" id="helfoFormOv" onclick="ovClick(event,'helfoFormOv')">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-hd">
+      <h3>🧠 Créer / Modifier un Helfo</h3>
+      <button class="x-btn" onclick="closeOv('helfoFormOv')">✕</button>
+    </div>
+    <div class="modal-bd">
+      <input type="hidden" id="hf_id">
+      <div class="fieldset-title">Informations générales</div>
+      <div class="fg-row">
+        <div class="fg"><label>Icône (emoji)</label><input type="text" class="inp" id="hf_icon" value="🧠" placeholder="🧠" style="font-size:1.3rem;text-align:center"></div>
+        <div class="fg"><label>Ordre d'affichage</label><input type="number" class="inp" id="hf_order" value="999"></div>
+      </div>
+      <div class="fg"><label>Titre principal</label><input type="text" class="inp" id="hf_title" placeholder="Ex: Créer son plugin Java"></div>
+      <div class="fg"><label>Sous-titre / accroche</label><input type="text" class="inp" id="hf_subtitle" placeholder="Ex: Guide complet pour débutants"></div>
+      <div class="fg"><label>Catégorie</label><input type="text" class="inp" id="hf_category" placeholder="Ex: Java, Discord, Web..."></div>
+      <div class="tog-row"><label>⭐ Mettre en vedette</label><button class="tog-btn" id="hf_featured_tog" onclick="toggleTog(this)"></button></div>
+      <div class="tog-row"><label>🙈 Masquer (brouillon)</label><button class="tog-btn" id="hf_hidden_tog" onclick="toggleTog(this)"></button></div>
+
+      <div class="fieldset-title">Contenu — Blocs</div>
+      <div id="hf_blocks" style="margin-bottom:12px"></div>
+
+      <div style="background:var(--surf2);border:1px solid var(--bdr2);border-radius:var(--r2);padding:12px 14px;margin-bottom:14px">
+        <div style="font-size:.65rem;font-weight:700;color:var(--txt2);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">+ Ajouter un bloc</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          <button class="btn btn-ghost btn-sm" onclick="addHelfoBlock('title')">📌 Titre</button>
+          <button class="btn btn-ghost btn-sm" onclick="addHelfoBlock('text')">📝 Texte</button>
+          <button class="btn btn-ghost btn-sm" onclick="addHelfoBlock('image')">🖼️ Image</button>
+          <button class="btn btn-ghost btn-sm" onclick="addHelfoBlock('video')">▶️ Vidéo</button>
+          <button class="btn btn-ghost btn-sm" onclick="addHelfoBlock('link')">🔗 Lien</button>
+          <button class="btn btn-ghost btn-sm" onclick="addHelfoBlock('tip')">💡 Astuce</button>
+          <button class="btn btn-ghost btn-sm" onclick="addHelfoBlock('warning')">⚠️ Avertissement</button>
+          <button class="btn btn-ghost btn-sm" onclick="addHelfoBlock('code')">💻 Code</button>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-full" onclick="saveHelfo()">💾 Enregistrer le Helfo</button>
+    </div>
+  </div>
+</div>
+
+<!-- BLOCK EDIT MODAL -->
+<div class="overlay" id="blockEditOv" onclick="ovClick(event,'blockEditOv')">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-hd">
+      <h3 id="blockEditTitle">Modifier le bloc</h3>
+      <button class="x-btn" onclick="closeOv('blockEditOv')">✕</button>
+    </div>
+    <div class="modal-bd">
+      <input type="hidden" id="be_idx">
+      <div id="blockEditBody"></div>
+    </div>
+  </div>
 </div>
 
 <!-- GENERIC FORM MODAL -->
@@ -259,7 +317,7 @@ const CAT_META={
 let db=null, FB=null;
 let curUser=JSON.parse(localStorage.getItem('cw_session')||'null');
 let projects={}; CATS.forEach(c=>projects[c]=[]);
-let campaigns=[], team=[], activeCat='sites', activeView='projects';
+let campaigns=[], team=[], helfos=[], activeCat='sites', activeView='projects';
 let settings={ enableLikes:true, enableViews:true, enableDownloadCount:true, showHighlights:true };
 
 async function apiGet(path){try{const r=await fetch(API+path,{headers:curUser?.token?{Authorization:`Bearer ${curUser.token}`}:{}});if(!r.ok)return{error:`HTTP ${r.status}`};return r.json();}catch(e){return{error:'Réseau'};}}
@@ -290,7 +348,7 @@ async function initAdmin(){
   $('hdrR').innerHTML=`<div style="font-size:.78rem;color:var(--txt2);font-weight:600">${curUser.emoji||'👑'} ${esc(curUser.username)}</div><a href="home.html" class="btn btn-ghost btn-sm">← Site</a><button class="btn btn-danger btn-sm" onclick="logout()">🚪 Déco</button>`;
   await waitForFirebase();
   db=window.__db; FB=window.__firebase;
-  await Promise.all([loadAllProjects(),loadSettings(),loadCampaigns(),loadTeam()]);
+  await Promise.all([loadAllProjects(),loadSettings(),loadCampaigns(),loadTeam(),loadHelfos()]);
   switchView('projects');
 }
 function showLogin(msg){
@@ -311,6 +369,15 @@ async function loadSettings(){
 }
 async function loadCampaigns(){ const d=await apiGet('/api/admin/campaigns'); campaigns=Array.isArray(d)?d:[]; }
 async function loadTeam(){ const d=await apiGet('/api/team'); team=Array.isArray(d)?d:[]; }
+async function loadHelfos(){
+  try{
+    const snap=await FB.getDocs(FB.collection(db,'helfos'));
+    helfos=[]; snap.forEach(d=>helfos.push({id:d.id,...d.data()}));
+    helfos.sort((a,b)=>(a.order||999)-(b.order||999));
+    const cnt=document.getElementById('helfosCnt');
+    if(cnt)cnt.textContent=helfos.length;
+  }catch(e){ helfos=[]; }
+}
 
 function switchView(view){
   if(view!=='users' && _usersUnsub){ _usersUnsub(); _usersUnsub=null; }
@@ -318,6 +385,7 @@ function switchView(view){
   document.querySelectorAll('.side-link').forEach(l=>l.classList.toggle('active',l.dataset.view===view));
   const c=$('content');
   if(view==='projects')renderProjectsView(c);
+  else if(view==='helfos')renderHelfosView(c);
   else if(view==='campaigns')renderCampaignsView(c);
   else if(view==='team')renderTeamView(c);
   else if(view==='users')renderUsersView(c);
@@ -475,6 +543,207 @@ async function saveProj(){
     projects[cat].sort((a,b)=>(a.order||999)-(b.order||999));
     closeProjForm(); toast('Projet enregistré !'); renderProjList();
   }catch(e){ toast('Erreur : '+e.message,'error'); }
+}
+
+
+/* ══════════════ HELFOS ══════════════ */
+function renderHelfosView(c){
+  c.innerHTML=`<h2>🧠 Helfos</h2><div class="sub">Créez des guides détaillés accessibles depuis le site — avec titre, description riche, images, vidéos et liens.</div>
+  <div style="margin-bottom:14px"><button class="btn btn-primary btn-sm" onclick="openHelfoForm()">+ Nouveau Helfo</button></div>
+  <div id="helfoList"></div>`;
+  renderHelfoList();
+}
+
+function renderHelfoList(){
+  const list=$('helfoList');
+  if(!helfos.length){ list.innerHTML='<div class="empty-hint">Aucun Helfo pour le moment. Créez votre premier guide !</div>'; return; }
+  list.innerHTML=helfos.map(h=>`
+    <div class="item-row">
+      <div class="item-thumb" style="font-size:1.5rem">${h.icon||'🧠'}</div>
+      <div class="item-main">
+        <div class="item-title">${esc(h.title||'Sans titre')}
+          ${h.hidden?'<span class="item-badge hidden">Masqué</span>':''}
+          ${h.featured?'<span class="item-badge hl">⭐ En vedette</span>':''}
+        </div>
+        <div class="item-meta">🏷 ${esc(h.category||'Général')} · 📋 ${(h.blocks||[]).length} bloc(s) · ordre ${h.order||999}</div>
+      </div>
+      <div class="item-actions">
+        <button class="btn btn-ghost btn-sm" onclick="openHelfoForm('${h.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteHelfo('${h.id}')">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+/* ── Helfo modal ── */
+let helfoBlocks=[]; // working copy of blocks during edit
+
+function openHelfoForm(id){
+  const h=id?helfos.find(x=>x.id===id):{};
+  helfoBlocks=JSON.parse(JSON.stringify(h?.blocks||[]));
+  document.getElementById('helfoFormOv').classList.add('open');
+  document.getElementById('hf_id').value=h?.id||'';
+  document.getElementById('hf_title').value=h?.title||'';
+  document.getElementById('hf_category').value=h?.category||'';
+  document.getElementById('hf_icon').value=h?.icon||'🧠';
+  document.getElementById('hf_order').value=h?.order||999;
+  document.getElementById('hf_subtitle').value=h?.subtitle||'';
+  const featTog=document.getElementById('hf_featured_tog');
+  const hidTog=document.getElementById('hf_hidden_tog');
+  featTog.className='tog-btn'+(h?.featured?' on':'');
+  hidTog.className='tog-btn'+(h?.hidden?' on':'');
+  renderHelfoBlocks();
+}
+
+function renderHelfoBlocks(){
+  const cont=document.getElementById('hf_blocks');
+  if(!helfoBlocks.length){
+    cont.innerHTML=`<div style="text-align:center;padding:18px;color:var(--txt3);font-size:.8rem;border:1.5px dashed var(--bdr2);border-radius:var(--r2)">
+      Aucun bloc. Ajoutez du contenu ci-dessous ↓</div>`;
+    return;
+  }
+  cont.innerHTML=helfoBlocks.map((b,i)=>`
+    <div style="background:var(--surf2);border:1px solid var(--bdr2);border-radius:var(--r2);padding:12px 14px;margin-bottom:8px;position:relative">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:.65rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px">${getBlockIcon(b.type)} ${b.type}</span>
+        <div style="display:flex;gap:4px">
+          ${i>0?`<button class="btn btn-ghost btn-sm" onclick="moveHelfoBlock(${i},-1)" style="padding:3px 7px">↑</button>`:''}
+          ${i<helfoBlocks.length-1?`<button class="btn btn-ghost btn-sm" onclick="moveHelfoBlock(${i},1)" style="padding:3px 7px">↓</button>`:''}
+          <button class="btn btn-danger btn-sm" onclick="removeHelfoBlock(${i})" style="padding:3px 7px">✕</button>
+        </div>
+      </div>
+      ${renderBlockPreview(b)}
+    </div>`).join('');
+}
+
+function getBlockIcon(type){
+  return {text:'📝',image:'🖼️',video:'▶️',link:'🔗',title:'📌',warning:'⚠️',tip:'💡',code:'💻'}[type]||'📄';
+}
+
+function renderBlockPreview(b){
+  switch(b.type){
+    case 'title': return `<div style="font-weight:700;font-size:.9rem;color:var(--txt)">${esc(b.content||'')}</div>`;
+    case 'text': return `<div style="font-size:.78rem;color:var(--txt2);line-height:1.5;white-space:pre-wrap">${esc((b.content||'').substring(0,120))}${b.content?.length>120?'…':''}</div>`;
+    case 'image': return `<div style="display:flex;align-items:center;gap:8px"><div style="width:48px;height:32px;background:var(--surf3);border-radius:5px;overflow:hidden;flex-shrink:0">${b.url?`<img src="${esc(b.url)}" style="width:100%;height:100%;object-fit:cover">`:'🖼️'}</div><span style="font-size:.76rem;color:var(--txt2)">${esc(b.caption||b.url||'Image')}</span></div>`;
+    case 'video': return `<div style="display:flex;align-items:center;gap:8px"><div style="font-size:1.5rem">▶️</div><div><div style="font-size:.76rem;font-weight:600">${esc(b.title||'Vidéo YouTube')}</div><div style="font-size:.68rem;color:var(--txt3)">${esc(b.url||'')}</div></div></div>`;
+    case 'link': return `<div style="font-size:.76rem"><span style="color:var(--cyan)">${esc(b.label||b.url||'')}</span> <span style="color:var(--txt3)">→ ${esc(b.url||'')}</span></div>`;
+    case 'warning': return `<div style="font-size:.78rem;color:var(--gold);padding:6px 10px;background:var(--goldg);border-radius:6px;border-left:3px solid var(--gold)">⚠️ ${esc((b.content||'').substring(0,100))}</div>`;
+    case 'tip': return `<div style="font-size:.78rem;color:var(--grn);padding:6px 10px;background:var(--grng);border-radius:6px;border-left:3px solid var(--grn)">💡 ${esc((b.content||'').substring(0,100))}</div>`;
+    case 'code': return `<div style="font-family:var(--mono);font-size:.72rem;color:var(--cyan);background:var(--bg);padding:6px 10px;border-radius:6px">${esc((b.content||'').substring(0,120))}</div>`;
+    default: return `<div style="font-size:.76rem;color:var(--txt3)">${esc(JSON.stringify(b).substring(0,80))}</div>`;
+  }
+}
+
+function addHelfoBlock(type){
+  const b={type};
+  if(type==='title')b.content='';
+  else if(type==='text')b.content='';
+  else if(type==='image'){b.url='';b.caption='';}
+  else if(type==='video'){b.url='';b.title='';}
+  else if(type==='link'){b.url='';b.label='';}
+  else if(type==='warning')b.content='';
+  else if(type==='tip')b.content='';
+  else if(type==='code'){b.content='';b.lang='java';}
+  helfoBlocks.push(b);
+  renderHelfoBlocks();
+  // Open inline edit for new block
+  openBlockEdit(helfoBlocks.length-1);
+}
+
+function removeHelfoBlock(i){ helfoBlocks.splice(i,1); renderHelfoBlocks(); }
+function moveHelfoBlock(i,dir){ const tmp=helfoBlocks[i]; helfoBlocks[i]=helfoBlocks[i+dir]; helfoBlocks[i+dir]=tmp; renderHelfoBlocks(); }
+
+function openBlockEdit(i){
+  const b=helfoBlocks[i];
+  const overlay=document.getElementById('blockEditOv');
+  const body=document.getElementById('blockEditBody');
+  document.getElementById('blockEditTitle').textContent=`${getBlockIcon(b.type)} Modifier — ${b.type}`;
+  document.getElementById('be_idx').value=i;
+  let html='';
+  switch(b.type){
+    case 'title':
+      html=`<div class="fg"><label>Texte du titre</label><input type="text" class="inp" id="be_content" value="${esc(b.content||'')}" placeholder="Ex: Comment créer votre premier plugin ?"></div>`;
+      break;
+    case 'text':
+      html=`<div class="fg"><label>Contenu (texte libre)</label><textarea class="inp" id="be_content" style="min-height:120px">${esc(b.content||'')}</textarea></div>`;
+      break;
+    case 'image':
+      html=`<div class="fg"><label>URL de l'image</label><input type="text" class="inp" id="be_url" value="${esc(b.url||'')}" placeholder="https://..."></div>
+      <div class="fg"><label>Légende (optionnel)</label><input type="text" class="inp" id="be_caption" value="${esc(b.caption||'')}" placeholder="Description de l'image"></div>`;
+      break;
+    case 'video':
+      html=`<div class="fg"><label>URL YouTube</label><input type="text" class="inp" id="be_url" value="${esc(b.url||'')}" placeholder="https://www.youtube.com/watch?v=..."></div>
+      <div class="fg"><label>Titre de la vidéo</label><input type="text" class="inp" id="be_title" value="${esc(b.title||'')}" placeholder="Ex: Tutoriel complet"></div>`;
+      break;
+    case 'link':
+      html=`<div class="fg"><label>URL</label><input type="text" class="inp" id="be_url" value="${esc(b.url||'')}" placeholder="https://..."></div>
+      <div class="fg"><label>Texte du lien</label><input type="text" class="inp" id="be_label" value="${esc(b.label||'')}" placeholder="Ex: Voir la documentation"></div>`;
+      break;
+    case 'warning':
+      html=`<div class="fg"><label>Texte d'avertissement</label><textarea class="inp" id="be_content" style="min-height:80px">${esc(b.content||'')}</textarea></div>`;
+      break;
+    case 'tip':
+      html=`<div class="fg"><label>Conseil / Astuce</label><textarea class="inp" id="be_content" style="min-height:80px">${esc(b.content||'')}</textarea></div>`;
+      break;
+    case 'code':
+      html=`<div class="fg"><label>Langage</label><input type="text" class="inp" id="be_lang" value="${esc(b.lang||'java')}" placeholder="java, js, python..."></div>
+      <div class="fg"><label>Code</label><textarea class="inp" style="min-height:120px;font-family:var(--mono)" id="be_content">${esc(b.content||'')}</textarea></div>`;
+      break;
+  }
+  body.innerHTML=html+`<button class="btn btn-primary btn-full" onclick="saveBlockEdit()" style="margin-top:10px">✓ Confirmer</button>`;
+  overlay.classList.add('open');
+}
+
+function saveBlockEdit(){
+  const i=parseInt(document.getElementById('be_idx').value);
+  const b=helfoBlocks[i];
+  const gv=id=>{ const el=document.getElementById(id); return el?el.value.trim():''; };
+  if(b.type==='title'||b.type==='text'||b.type==='warning'||b.type==='tip')b.content=gv('be_content');
+  else if(b.type==='code'){b.content=gv('be_content');b.lang=gv('be_lang')||'java';}
+  else if(b.type==='image'){b.url=gv('be_url');b.caption=gv('be_caption');}
+  else if(b.type==='video'){b.url=gv('be_url');b.title=gv('be_title');}
+  else if(b.type==='link'){b.url=gv('be_url');b.label=gv('be_label');}
+  document.getElementById('blockEditOv').classList.remove('open');
+  renderHelfoBlocks();
+}
+
+async function saveHelfo(){
+  const id=document.getElementById('hf_id').value||('helfo_'+Date.now().toString(36));
+  const data={
+    id,
+    title:document.getElementById('hf_title').value.trim(),
+    subtitle:document.getElementById('hf_subtitle').value.trim(),
+    category:document.getElementById('hf_category').value.trim()||'Général',
+    icon:document.getElementById('hf_icon').value.trim()||'🧠',
+    order:Number(document.getElementById('hf_order').value)||999,
+    featured:document.getElementById('hf_featured_tog').classList.contains('on'),
+    hidden:document.getElementById('hf_hidden_tog').classList.contains('on'),
+    blocks:helfoBlocks,
+    updatedAt:new Date().toISOString()
+  };
+  if(!data.title){toast('Le titre est requis','error');return;}
+  try{
+    await FB.setDoc(FB.doc(db,'helfos',id),data);
+    const idx=helfos.findIndex(x=>x.id===id);
+    if(idx>=0)helfos[idx]=data; else helfos.push(data);
+    helfos.sort((a,b)=>(a.order||999)-(b.order||999));
+    const cnt=document.getElementById('helfosCnt');
+    if(cnt)cnt.textContent=helfos.length;
+    document.getElementById('helfoFormOv').classList.remove('open');
+    toast('Helfo enregistré ! 🧠');
+    if(activeView==='helfos')renderHelfosView($('content'));
+  }catch(e){toast('Erreur : '+e.message,'error');}
+}
+
+async function deleteHelfo(id){
+  if(!confirm('Supprimer ce Helfo ?'))return;
+  try{
+    await FB.deleteDoc(FB.doc(db,'helfos',id));
+    helfos=helfos.filter(x=>x.id!==id);
+    const cnt=document.getElementById('helfosCnt');
+    if(cnt)cnt.textContent=helfos.length;
+    toast('Helfo supprimé');
+    renderHelfosView($('content'));
+  }catch(e){toast('Erreur : '+e.message,'error');}
 }
 
 /* ══════════════ CAMPAGNES ══════════════ */
