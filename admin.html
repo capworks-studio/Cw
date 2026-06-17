@@ -553,6 +553,7 @@ async function saveProj(){
   .rte-preview .yt-thumb{display:flex;align-items:center;gap:8px;background:var(--surf3);border-radius:6px;padding:8px 12px;margin:4px 0;font-size:.76rem;color:var(--txt2)}
   .rte-preview .yt-thumb-icon{font-size:1.3rem}
   .rte-preview p{margin-bottom:6px}
+  .rte-preview .ff-mono{background:var(--bg);border:1px solid var(--bdr2);border-radius:4px;padding:1px 5px;font-size:.75rem;color:var(--cyan);display:inline}
   `;
   document.head.appendChild(s);
 })();
@@ -685,9 +686,17 @@ function previewRTE(raw) {
     if(ym && t.match(/^https?:\/\//)){
       html+=`<div class="yt-thumb"><span class="yt-thumb-icon">▶️</span><span>YouTube — ${ym[1]}</span></div>`; return;
     }
+    if(t.startsWith('[[')){
+      const txt=t.replace(/^\[\[/,'').replace(/\]\]$/,'');
+      const e=txt.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      html+=`<div style="background:var(--bg);border:1px solid var(--bdr2);border-radius:6px;padding:6px 10px;font-family:var(--mono);font-size:.72rem;color:var(--cyan);white-space:pre-wrap">📋 ${e}</div>`; return;
+    }
     let p = t;
     p=p.replace(/\[size:(sm|md|lg|xl|xxl)\](.*?)\[\/size\]/gi,'<span class="fs-$1">$2</span>');
-    p=p.replace(/\[font:(mono|display|default)\](.*?)\[\/font\]/g,'<span class="ff-$1">$2</span>');
+    p=p.replace(/\[font:(mono|display|default)\](.*?)\[\/font\]/g,(f,type,txt)=>{
+      if(type==='mono'){const e=txt.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');return `<span class="ff-mono">${e}</span>`;}
+      return `<span class="ff-${type}">${txt}</span>`;
+    });
     p=p.replace(/_([A-Za-z]+)_(.*?)_/g,(f,c,t2)=>['red','orange','yellow','green','blue','purple'].includes(c.toLowerCase())?`<span class="hl-${c.toLowerCase()}">${t2}</span>`:f);
     p=p.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
     p=p.replace(/\*([^*]+)\*/g,'<em>$1</em>');

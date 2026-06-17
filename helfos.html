@@ -187,6 +187,10 @@ nav a.active{color:var(--accent);background:rgba(108,92,231,.1)}
 .rte-video-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.4);transition:background .2s}
 .rte-video-play:hover{background:rgba(0,0,0,.55)}
 .rte-video-play-btn{width:60px;height:60px;border-radius:50%;background:rgba(108,92,231,.85);display:flex;align-items:center;justify-content:center;font-size:1.5rem;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+.rte-copy-block{position:relative;background:var(--surf2);border:1px solid var(--bdr2);border-radius:var(--r2);padding:14px 16px 14px 16px;margin:12px 0;font-family:var(--mono);font-size:.8rem;line-height:1.7;color:var(--cyan);white-space:pre-wrap;word-break:break-all}
+.rte-copy-btn{position:absolute;top:8px;right:8px;background:var(--surf3);border:1px solid var(--bdr2);color:var(--txt2);width:28px;height:28px;border-radius:7px;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;transition:all .2s;opacity:.6}
+.rte-copy-btn:hover{opacity:1;border-color:var(--accent);color:var(--accent)}
+.rte-copy-btn.copied{border-color:var(--grn);color:var(--grn);opacity:1}
 
 /* ── FOOTER ── */
 footer{position:relative;z-index:1;border-top:1px solid var(--bdr);padding:36px;text-align:center}
@@ -350,6 +354,29 @@ function parseRTE(raw) {
       i++; continue;
     }
 
+    // [[TEXT]] copy block — multi-line, collect until closing ]]
+    if(trimmed.startsWith('[[')) {
+      // Collect lines until we find one ending with ]]
+      let blockLines = [line.replace(/^\s*\[\[/, '')];
+      let closed = trimmed.endsWith(']]');
+      if(closed) blockLines[0] = blockLines[0].replace(/\]\]\s*$/, '');
+      while(!closed && i+1 < lines.length) {
+        i++;
+        const nl = lines[i];
+        if(nl.trimEnd().endsWith(']]')) {
+          blockLines.push(nl.replace(/\]\]\s*$/, ''));
+          closed = true;
+        } else {
+          blockLines.push(nl);
+        }
+      }
+      const blockText = blockLines.join('\n');
+      const escaped = blockText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const uid = 'cb_'+Math.random().toString(36).slice(2,8);
+      html += `<div class="rte-copy-block" id="${uid}">${escaped}<button class="rte-copy-btn" title="Copier" onclick="copyBlock('${uid}',this)">📋</button></div>`;
+      i++; continue;
+    }
+
     // Normal paragraph — process inline markup
     html += '<p>' + parseInline(line) + '</p>';
     i++;
@@ -358,9 +385,14 @@ function parseRTE(raw) {
 }
 
 function parseInline(text) {
-  // [font:TYPE]...[/font]
-  text = text.replace(/\[font:(mono|display|default)\]([\s\S]*?)\[\/font\]/g, (_, type, content) =>
-    `<span class="ff-${type}">${parseInlineInner(content)}</span>`);
+  // [font:TYPE]...[/font] — mono escapes HTML, others parse inline
+  text = text.replace(/\[font:(mono|display|default)\]([\s\S]*?)\[\/font\]/g, (_, type, content) => {
+    if(type === 'mono') {
+      const escaped = content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      return `<span class="ff-mono">${escaped}</span>`;
+    }
+    return `<span class="ff-${type}">${parseInlineInner(content)}</span>`;
+  });
 
   // [size:SM|MD|LG|XL|XXL]...[/size]
   text = text.replace(/\[size:(sm|md|lg|xl|xxl)\]([\s\S]*?)\[\/size\]/gi, (_, sz, content) =>
@@ -400,6 +432,23 @@ function parseBasicInline(text) {
 }
 
 function escAttr(s){ return String(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+function copyBlock(id, btn) {
+  const el = document.getElementById(id);
+  if(!el) return;
+  // Get text content without the button text
+  const clone = el.cloneNode(true);
+  clone.querySelector('.rte-copy-btn')?.remove();
+  const text = clone.innerText || clone.textContent;
+  navigator.clipboard.writeText(text.trim()).then(() => {
+    btn.textContent = '✓';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '📋'; btn.classList.remove('copied'); }, 1800);
+  }).catch(() => {
+    btn.textContent = '✗';
+    setTimeout(() => { btn.textContent = '📋'; }, 1500);
+  });
+}
 
 function embedYT(el, vid){
   el.outerHTML = `<div class="rte-video-wrap"><iframe src="https://www.youtube.com/embed/${vid}?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe></div>`;
