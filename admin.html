@@ -710,9 +710,8 @@ function buildRTEToolbar(textareaId) {
     <button class="rte-btn" title="Italique" onclick="rteInsert('${textareaId}','*','*')"><i>I</i></button>
     <button class="rte-btn" title="Souligné" onclick="rteInsert('${textareaId}','_','_')"><u>S</u></button>
     <div class="rte-sep"></div>
-    <button class="rte-btn" title="Surligner Rouge" onclick="rteHighlight('${textareaId}','Red')" style="color:#f57fb5;border-color:rgba(232,67,147,.4)">Su</button>
-    <select class="rte-select" title="Couleur surlignage" onchange="if(this.value){rteHighlight('${textareaId}',this.value);this.value=''}">
-      <option value="">🎨 Couleur</option>
+    <select class="rte-select" title="Surligner" onchange="if(this.value){rteHighlight('${textareaId}',this.value);this.value=''}" style="color:#f57fb5;border-color:rgba(232,67,147,.3)">
+      <option value="">Su 🎨</option>
       <option value="Red">🔴 Rouge</option>
       <option value="Orange">🟠 Orange</option>
       <option value="Yellow">🟡 Jaune</option>
